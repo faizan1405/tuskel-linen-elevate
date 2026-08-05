@@ -41,7 +41,8 @@ export const ENV = getEnv();
  * client IDs.
  */
 export const CLIENT_ENV = {
-  NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env["NEXT_PUBLIC_GOOGLE_CLIENT_ID"] || "",
+  // @ts-expect-error Next.js requires dot notation for inline replacement
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
 } as const;
 
 if (!CLIENT_ENV.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
