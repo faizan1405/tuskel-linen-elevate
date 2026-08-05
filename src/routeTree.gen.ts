@@ -10,14 +10,28 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CartRouteImport } from './routes/cart'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as NewArrivalsRouteImport } from './routes/new-arrivals'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as CollectionsLinenBlendRouteImport } from './routes/collections/linen-blend'
 import { Route as CollectionsPureLinenRouteImport } from './routes/collections/pure-linen'
+import { Route as ProductSlugRouteImport } from './routes/product/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewArrivalsRoute = NewArrivalsRouteImport.update({
@@ -30,6 +44,11 @@ const ShopRoute = ShopRouteImport.update({
   path: '/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WishlistRoute = WishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CollectionsLinenBlendRoute = CollectionsLinenBlendRouteImport.update({
   id: '/collections/linen-blend',
   path: '/collections/linen-blend',
@@ -40,59 +59,92 @@ const CollectionsPureLinenRoute = CollectionsPureLinenRouteImport.update({
   path: '/collections/pure-linen',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductSlugRoute = ProductSlugRouteImport.update({
+  id: '/product/$slug',
+  path: '/product/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
   '/new-arrivals': typeof NewArrivalsRoute
   '/shop': typeof ShopRoute
+  '/wishlist': typeof WishlistRoute
   '/collections/linen-blend': typeof CollectionsLinenBlendRoute
   '/collections/pure-linen': typeof CollectionsPureLinenRoute
+  '/product/$slug': typeof ProductSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
   '/new-arrivals': typeof NewArrivalsRoute
   '/shop': typeof ShopRoute
+  '/wishlist': typeof WishlistRoute
   '/collections/linen-blend': typeof CollectionsLinenBlendRoute
   '/collections/pure-linen': typeof CollectionsPureLinenRoute
+  '/product/$slug': typeof ProductSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
   '/new-arrivals': typeof NewArrivalsRoute
   '/shop': typeof ShopRoute
+  '/wishlist': typeof WishlistRoute
   '/collections/linen-blend': typeof CollectionsLinenBlendRoute
   '/collections/pure-linen': typeof CollectionsPureLinenRoute
+  '/product/$slug': typeof ProductSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/cart'
+    | '/checkout'
     | '/new-arrivals'
     | '/shop'
+    | '/wishlist'
     | '/collections/linen-blend'
     | '/collections/pure-linen'
+    | '/product/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/cart'
+    | '/checkout'
     | '/new-arrivals'
     | '/shop'
+    | '/wishlist'
     | '/collections/linen-blend'
     | '/collections/pure-linen'
+    | '/product/$slug'
   id:
     | '__root__'
     | '/'
+    | '/cart'
+    | '/checkout'
     | '/new-arrivals'
     | '/shop'
+    | '/wishlist'
     | '/collections/linen-blend'
     | '/collections/pure-linen'
+    | '/product/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CartRoute: typeof CartRoute
+  CheckoutRoute: typeof CheckoutRoute
   NewArrivalsRoute: typeof NewArrivalsRoute
   ShopRoute: typeof ShopRoute
+  WishlistRoute: typeof WishlistRoute
   CollectionsLinenBlendRoute: typeof CollectionsLinenBlendRoute
   CollectionsPureLinenRoute: typeof CollectionsPureLinenRoute
+  ProductSlugRoute: typeof ProductSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -102,6 +154,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/new-arrivals': {
@@ -118,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/collections/linen-blend': {
       id: '/collections/linen-blend'
       path: '/collections/linen-blend'
@@ -132,15 +205,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsPureLinenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/product/$slug': {
+      id: '/product/$slug'
+      path: '/product/$slug'
+      fullPath: '/product/$slug'
+      preLoaderRoute: typeof ProductSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CartRoute: CartRoute,
+  CheckoutRoute: CheckoutRoute,
   NewArrivalsRoute: NewArrivalsRoute,
   ShopRoute: ShopRoute,
+  WishlistRoute: WishlistRoute,
   CollectionsLinenBlendRoute: CollectionsLinenBlendRoute,
   CollectionsPureLinenRoute: CollectionsPureLinenRoute,
+  ProductSlugRoute: ProductSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
