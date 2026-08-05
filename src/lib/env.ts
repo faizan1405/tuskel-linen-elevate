@@ -15,11 +15,11 @@ const envSchema = z.object({
  */
 function getEnv() {
   const raw = {
-    MONGODB_URI: (import.meta.env as Record<string, unknown>)["MONGODB_URI"],
-    CLOUDINARY_CLOUD_NAME: (import.meta.env as Record<string, unknown>)["CLOUDINARY_CLOUD_NAME"],
-    CLOUDINARY_API_KEY: (import.meta.env as Record<string, unknown>)["CLOUDINARY_API_KEY"],
-    CLOUDINARY_API_SECRET: (import.meta.env as Record<string, unknown>)["CLOUDINARY_API_SECRET"],
-    GOOGLE_CLIENT_SECRET: (import.meta.env as Record<string, unknown>)["GOOGLE_CLIENT_SECRET"],
+    MONGODB_URI: process.env.MONGODB_URI,
+    CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   };
 
   const result = envSchema.safeParse(raw);
