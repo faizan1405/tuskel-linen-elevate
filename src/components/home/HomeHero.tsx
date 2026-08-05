@@ -1,4 +1,5 @@
-import { Link } from "@tanstack/react-router";
+"use client";
+import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { ArrowDown } from "lucide-react";
@@ -52,14 +53,12 @@ export function HomeHero() {
               Premium linen shirts crafted for effortless comfort, timeless style and modern living.
             </p>,
             <div key="c" className="mt-9 flex flex-wrap gap-3">
-              <Link
-                to="/collections/pure-linen"
+              <Link href="/collections/pure-linen"
                 className="min-h-12 bg-[oklch(0.977_0.006_85)] px-8 py-3.5 text-[11px] font-medium tracking-[0.18em] text-foreground uppercase transition-opacity hover:opacity-85"
               >
                 Shop Pure Linen
               </Link>
-              <Link
-                to="/collections/linen-blend"
+              <Link href="/collections/linen-blend"
                 className="min-h-12 border border-[oklch(0.977_0.006_85/0.6)] px-8 py-3.5 text-[11px] font-medium tracking-[0.18em] uppercase transition-colors hover:bg-[oklch(0.977_0.006_85/0.12)]"
               >
                 Explore Linen Blend

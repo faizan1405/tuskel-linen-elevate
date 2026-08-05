@@ -1,0 +1,60 @@
+{
+  "node": {
+    "408c0359f11ef67a317f96ffd2d56e5ec44cbd02a6": {
+      "workers": {
+        "app/admin/products/page": {
+          "moduleId": 55467,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "verifyGoogleToken",
+      "filename": "src/lib/google-auth.server.ts"
+    },
+    "00e5672dc3b608eb47b7ddaa87e443454d1ea99606": {
+      "workers": {
+        "app/admin/products/page": {
+          "moduleId": 55467,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "adminGetProducts",
+      "filename": "src/lib/admin/server.ts"
+    },
+    "40965e7e4b2babc63b4e5dad5498c4eca80996fe6b": {
+      "workers": {
+        "app/admin/products/page": {
+          "moduleId": 55467,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "adminCreateProduct",
+      "filename": "src/lib/admin/server.ts"
+    },
+    "40677b4c153be1cca486cdeaabd8f9381538a4ab55": {
+      "workers": {
+        "app/admin/products/page": {
+          "moduleId": 55467,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "adminUpdateProduct",
+      "filename": "src/lib/admin/server.ts"
+    },
+    "40a7c96691d82b5a371233ee9c64af7112966a1d15": {
+      "workers": {
+        "app/admin/products/page": {
+          "moduleId": 55467,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "adminDeleteProduct",
+      "filename": "src/lib/admin/server.ts"
+    }
+  },
+  "edge": {}
+}

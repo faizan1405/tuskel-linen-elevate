@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { AdminAuthProvider, useAdminAuth } from "@/lib/admin/auth";
@@ -26,21 +27,24 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Link, useLocation } from "@tanstack/react-router";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+import { usePathname } from "next/navigation";
+
 const navItems = [
-  { title: "Dashboard", to: "/admin", icon: LayoutDashboard },
-  { title: "Products", to: "/admin/products", icon: Package },
-  { title: "Orders", to: "/admin/orders", icon: ShoppingCart },
-  { title: "Customers", to: "/admin/customers", icon: Users },
-  { title: "Settings", to: "/admin/settings", icon: Settings },
+  { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { title: "Products", href: "/admin/products", icon: Package },
+  { title: "Orders", href: "/admin/orders", icon: ShoppingCart },
+  { title: "Customers", href: "/admin/customers", icon: Users },
+  { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 function AdminSidebarInner() {
-  const location = useLocation();
+  
   const { logout } = useAdminAuth();
+  const pathname = usePathname();
 
   return (
     <Sidebar collapsible="none" className="border-r">
@@ -56,9 +60,9 @@ function AdminSidebarInner() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.to || (item.to !== "/admin" && location.pathname.startsWith(item.to))}>
-                    <Link to={item.to}>
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild isActive={pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href))}>
+                    <Link href={item.href}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </Link>
@@ -88,7 +92,7 @@ function AdminSidebarInner() {
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/">← Back to Store</Link>
+              <Link href="/">← Back to Store</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="text-red-600">Log out</DropdownMenuItem>

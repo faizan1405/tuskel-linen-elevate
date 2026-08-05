@@ -1,3 +1,4 @@
+"use client";
 import type { ReactNode } from "react";
 
 export function Prose({ children }: { children: ReactNode }) {

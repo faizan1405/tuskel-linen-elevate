@@ -1,0 +1,38 @@
+{
+  "node": {
+    "408c0359f11ef67a317f96ffd2d56e5ec44cbd02a6": {
+      "workers": {
+        "app/admin/customers/page": {
+          "moduleId": 13556,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "verifyGoogleToken",
+      "filename": "src/lib/google-auth.server.ts"
+    },
+    "0048c6c72ba0e414d7a01c7b653412274ae334dc97": {
+      "workers": {
+        "app/admin/customers/page": {
+          "moduleId": 13556,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "adminGetCustomers",
+      "filename": "src/lib/admin/server.ts"
+    },
+    "002cb3da56feee026174c973b16c4eb6c7afffa9c5": {
+      "workers": {
+        "app/admin/customers/page": {
+          "moduleId": 13556,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "adminGetOrders",
+      "filename": "src/lib/admin/server.ts"
+    }
+  },
+  "edge": {}
+}

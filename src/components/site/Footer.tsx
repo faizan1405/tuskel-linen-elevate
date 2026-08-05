@@ -1,4 +1,5 @@
-import { Link } from "@tanstack/react-router";
+"use client";
+import Link from "next/link";
 import { Instagram, Facebook, Twitter, ShieldCheck } from "lucide-react";
 import { site } from "@/lib/site";
 import { Newsletter } from "./Newsletter";
@@ -117,7 +118,7 @@ export function Footer() {
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
             {legal.map((l) => (
-              <Link key={l.label} to={l.to} className="link-underline">
+              <Link key={l.label} href={l.to} className="link-underline">
                 {l.label}
               </Link>
             ))}
@@ -144,7 +145,7 @@ function FooterCol({
       <ul className="space-y-2.5">
         {links.map((l) => (
           <li key={l.label}>
-            <Link to={l.to} className="link-underline text-[13px] text-muted-foreground">
+            <Link href={l.to} className="link-underline text-[13px] text-muted-foreground">
               {l.label}
             </Link>
           </li>

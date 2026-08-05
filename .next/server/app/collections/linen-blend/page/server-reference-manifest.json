@@ -1,0 +1,16 @@
+{
+  "node": {
+    "408c0359f11ef67a317f96ffd2d56e5ec44cbd02a6": {
+      "workers": {
+        "app/collections/linen-blend/page": {
+          "moduleId": 94924,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "verifyGoogleToken",
+      "filename": "src/lib/google-auth.server.ts"
+    }
+  },
+  "edge": {}
+}

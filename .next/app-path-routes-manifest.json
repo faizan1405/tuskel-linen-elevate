@@ -1,0 +1,19 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/account/page": "/account",
+  "/admin/customers/page": "/admin/customers",
+  "/admin/orders/page": "/admin/orders",
+  "/admin/page": "/admin",
+  "/admin/products/page": "/admin/products",
+  "/admin/settings/page": "/admin/settings",
+  "/cart/page": "/cart",
+  "/checkout/page": "/checkout",
+  "/collections/linen-blend/page": "/collections/linen-blend",
+  "/collections/pure-linen/page": "/collections/pure-linen",
+  "/new-arrivals/page": "/new-arrivals",
+  "/page": "/",
+  "/product/[slug]/page": "/product/[slug]",
+  "/shop/page": "/shop",
+  "/wishlist/page": "/wishlist"
+}

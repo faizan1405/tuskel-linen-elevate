@@ -1,5 +1,7 @@
+"use client";
 import { useEffect, useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Heart, Menu, Search, ShoppingBag, User, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,7 +35,7 @@ const MEGA = [
 ] as const;
 
 export function Header() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -86,7 +88,7 @@ export function Header() {
         </div>
 
         <Link
-          to="/"
+          href="/"
           className="font-display text-[22px] leading-none tracking-[0.34em] lg:text-[26px]"
           aria-label="Tuskel home"
         >
@@ -101,11 +103,8 @@ export function Header() {
                 onMouseEnter={() => setMegaOpen("mega" in item ? Boolean(item.mega) : false)}
               >
                 <Link
-                  to={item.to}
+                  href={item.to}
                   className="flex items-center gap-1 py-2 text-[11px] font-medium tracking-[0.15em] uppercase"
-                  activeProps={{ className: "text-foreground" }}
-                  inactiveProps={{ className: "text-foreground/75 hover:text-foreground" }}
-                  activeOptions={{ exact: item.to === "/" }}
                 >
                   {item.label}
                   {"mega" in item && item.mega && (
@@ -128,7 +127,7 @@ export function Header() {
           </button>
           {authHydrated && user ? (
             <Link
-              to="/account"
+              href="/account"
               aria-label={`Account, signed in as ${user.name}`}
               className="hidden h-11 w-11 items-center justify-center sm:flex"
             >
@@ -154,7 +153,7 @@ export function Header() {
             </button>
           )}
           <Link
-            to="/wishlist"
+            href="/wishlist"
             aria-label={`Wishlist${hydrated && wishlist.length ? `, ${wishlist.length} saved` : ""}`}
             className="relative flex h-11 w-11 items-center justify-center"
           >
@@ -195,8 +194,8 @@ export function Header() {
                   {MEGA.map((m) => (
                     <li key={m.label}>
                       <Link
-                        to={m.to}
-                        search={"search" in m ? (m.search as never) : undefined}
+                        href={m.to}
+                        
                         className="link-underline text-[14px]"
                       >
                         {m.label}
@@ -211,8 +210,7 @@ export function Header() {
                   {colours.map((c) => (
                     <li key={c.slug}>
                       <Link
-                        to="/shop"
-                        search={{ colour: c.slug }}
+                        href="/shop"
                         className="group flex items-center gap-2.5 text-[13px]"
                       >
                         <span
@@ -228,7 +226,7 @@ export function Header() {
               </div>
               <div className="col-span-5 grid grid-cols-2 gap-5">
                 {products.slice(0, 2).map((p) => (
-                  <Link key={p.slug} to="/product/$slug" params={{ slug: p.slug }} className="group">
+                  <Link key={p.slug} href={`/product/${p.slug}`} className="group">
                     <div className="aspect-4/5 overflow-hidden bg-secondary">
                       <img
                         src={p.images[0]}
@@ -263,7 +261,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
       <nav aria-label="Mobile" className="flex-1 px-5 py-4">
         <ul className="divide-y divide-border">
           <li>
-            <Link to="/" onClick={onNavigate} className="block py-3.5 text-[14px]">
+            <Link href="/" onClick={onNavigate} className="block py-3.5 text-[14px]">
               Home
             </Link>
           </li>
@@ -291,8 +289,8 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
                   {MEGA.map((m) => (
                     <li key={m.label}>
                       <Link
-                        to={m.to}
-                        search={"search" in m ? (m.search as never) : undefined}
+                        href={m.to}
+                        
                         onClick={onNavigate}
                         className="block py-2.5 pl-4 text-[13px] text-muted-foreground"
                       >
@@ -328,8 +326,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
                   {colours.map((c) => (
                     <li key={c.slug}>
                       <Link
-                        to="/shop"
-                        search={{ colour: c.slug }}
+                        href="/shop"
                         onClick={onNavigate}
                         className="flex items-center gap-2.5 py-2.5 pl-4 text-[13px] text-muted-foreground"
                       >
@@ -347,13 +344,13 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
           </li>
           {NAV.filter((n) => !["Home", "Shop"].includes(n.label)).map((item) => (
             <li key={item.label}>
-              <Link to={item.to} onClick={onNavigate} className="block py-3.5 text-[14px]">
+              <Link href={item.to} onClick={onNavigate} className="block py-3.5 text-[14px]">
                 {item.label}
               </Link>
             </li>
           ))}
           <li>
-            <Link to="/journal" onClick={onNavigate} className="block py-3.5 text-[14px]">
+            <Link href="/journal" onClick={onNavigate} className="block py-3.5 text-[14px]">
               Journal
             </Link>
           </li>
@@ -361,9 +358,9 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
       </nav>
       <div className="border-t border-border px-5 py-4">
         <div className="flex gap-4 text-[12px] tracking-[0.12em] uppercase">
-          <Link to="/account" onClick={onNavigate}>Account</Link>
-          <Link to="/wishlist" onClick={onNavigate}>Wishlist</Link>
-          <Link to="/track-order" onClick={onNavigate}>Track Order</Link>
+          <Link href="/account" onClick={onNavigate}>Account</Link>
+          <Link href="/wishlist" onClick={onNavigate}>Wishlist</Link>
+          <Link href="/track-order" onClick={onNavigate}>Track Order</Link>
         </div>
       </div>
     </div>
@@ -411,8 +408,7 @@ function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
             {results.map((p) => (
               <li key={p.slug}>
                 <Link
-                  to="/product/$slug"
-                  params={{ slug: p.slug }}
+                  href={`/product/${p.slug}`}
                   onClick={() => onOpenChange(false)}
                   className="flex items-center gap-4 px-2 py-2.5 hover:bg-secondary"
                 >

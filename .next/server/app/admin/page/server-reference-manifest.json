@@ -1,0 +1,60 @@
+{
+  "node": {
+    "408c0359f11ef67a317f96ffd2d56e5ec44cbd02a6": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27846,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "verifyGoogleToken",
+      "filename": "src/lib/google-auth.server.ts"
+    },
+    "00cc745ffdef3eb8665cfa534323029f80acf2f638": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27846,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "adminGetStats",
+      "filename": "src/lib/admin/server.ts"
+    },
+    "000bcfff75f8812ebb447ee5af2b48e6057a563125": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27846,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "adminGetMonthlyRevenue",
+      "filename": "src/lib/admin/server.ts"
+    },
+    "4080e558c690e6a78dda7c09f24ee183deadd98ce6": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27846,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "adminGetTopProducts",
+      "filename": "src/lib/admin/server.ts"
+    },
+    "40f329eef547b90dcbbd772a34067f8f5b6178e0be": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27846,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "adminGetRecentOrders",
+      "filename": "src/lib/admin/server.ts"
+    }
+  },
+  "edge": {}
+}

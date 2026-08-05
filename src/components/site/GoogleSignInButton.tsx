@@ -1,3 +1,4 @@
+"use client";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { verifyGoogleToken } from "@/lib/google-auth.server";
@@ -7,7 +8,7 @@ import { CLIENT_ENV } from "@/lib/env";
 
 export function GoogleSignInButton() {
   const { signInWithGoogle } = useAuth();
-  const clientId = CLIENT_ENV.VITE_GOOGLE_CLIENT_ID;
+  const clientId = CLIENT_ENV.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
   if (!clientId || clientId === "your-client-id.apps.googleusercontent.com") {
     return (

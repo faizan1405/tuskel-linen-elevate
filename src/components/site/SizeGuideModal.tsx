@@ -1,3 +1,4 @@
+"use client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { sizeChart } from "@/lib/products";
 import type { ReactNode } from "react";

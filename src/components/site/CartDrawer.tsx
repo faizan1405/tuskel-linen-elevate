@@ -1,4 +1,5 @@
-import { Link } from "@tanstack/react-router";
+"use client";
+import Link from "next/link";
 import { Minus, Plus, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useStore } from "@/lib/store";
@@ -20,8 +21,7 @@ export function CartDrawer() {
             <p className="text-[13px] text-muted-foreground">
               Start with the shirts our customers return to most.
             </p>
-            <Link
-              to="/shop"
+            <Link href="/shop"
               onClick={() => setCartOpen(false)}
               className="mt-2 min-h-11 bg-foreground px-8 py-3 text-[11px] font-medium tracking-[0.18em] text-primary-foreground uppercase"
             >
@@ -33,9 +33,7 @@ export function CartDrawer() {
             <ul className="flex-1 divide-y divide-border overflow-y-auto px-6">
               {lines.map((line) => (
                 <li key={`${line.slug}-${line.size}`} className="flex gap-4 py-5">
-                  <Link
-                    to="/product/$slug"
-                    params={{ slug: line.slug }}
+                  <Link href={`/product/${line.slug}`}
                     onClick={() => setCartOpen(false)}
                     className="shrink-0"
                   >
@@ -97,15 +95,13 @@ export function CartDrawer() {
                 Shipping free across India. Taxes included.
               </p>
               <div className="mt-5 grid gap-2">
-                <Link
-                  to="/checkout"
+                <Link href="/checkout"
                   onClick={() => setCartOpen(false)}
                   className="flex min-h-12 items-center justify-center bg-foreground text-[11px] font-medium tracking-[0.18em] text-primary-foreground uppercase transition-opacity hover:opacity-85"
                 >
                   Proceed to Checkout
                 </Link>
-                <Link
-                  to="/cart"
+                <Link href="/cart"
                   onClick={() => setCartOpen(false)}
                   className="flex min-h-12 items-center justify-center border border-border text-[11px] font-medium tracking-[0.18em] uppercase hover:bg-secondary"
                 >

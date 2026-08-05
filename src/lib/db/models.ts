@@ -4,7 +4,7 @@ let _connection: typeof mongoose | null = null;
 
 export async function connectDb(): Promise<typeof mongoose> {
   if (_connection && _connection.connection.readyState >= 1) return _connection;
-  const env = import.meta.env as Record<string, string | undefined>;
+  const env = process.env as Record<string, string | undefined>;
   const uri = env["MONGODB_URI"];
   if (!uri) throw new Error("MONGODB_URI not set");
   _connection = await mongoose.connect(uri);

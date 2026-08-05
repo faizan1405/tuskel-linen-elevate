@@ -1,3 +1,4 @@
+"use client";
 import { ProductCard } from "./ProductCard";
 import { Reveal } from "./Reveal";
 import type { Product } from "@/lib/products";

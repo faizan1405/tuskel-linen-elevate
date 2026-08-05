@@ -1,5 +1,6 @@
+"use client";
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { Heart, X } from "lucide-react";
 import { toast } from "sonner";
@@ -25,9 +26,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   return (
     <article className="group relative">
       <div className="relative overflow-hidden bg-secondary">
-        <Link
-          to="/product/$slug"
-          params={{ slug: product.slug }}
+        <Link href={`/product/${product.slug}`}
           aria-label={`View ${product.name}`}
           className="block"
         >
@@ -122,7 +121,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="font-sans text-[13px] leading-snug font-medium">
-              <Link to="/product/$slug" params={{ slug: product.slug }} className="link-underline">
+              <Link href={`/product/${product.slug}`} className="link-underline">
                 {product.name}
               </Link>
             </h3>
@@ -142,9 +141,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           <span className="text-muted-foreground line-through">{inr(product.mrp)}</span>
         </p>
         <div className="mt-3 md:hidden">
-          <Link
-            to="/product/$slug"
-            params={{ slug: product.slug }}
+          <Link href={`/product/${product.slug}`}
             className="inline-flex min-h-11 items-center text-[11px] font-medium tracking-[0.18em] uppercase underline underline-offset-4"
           >
             Select size

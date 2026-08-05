@@ -1,4 +1,5 @@
-import { Link } from "@tanstack/react-router";
+"use client";
+import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { Leaf, Wind, Truck, RotateCcw } from "lucide-react";
@@ -71,7 +72,7 @@ export function CollectionCards() {
       <div className="grid gap-5 md:grid-cols-2 md:gap-6">
         {cards.map((c, i) => (
           <Reveal key={c.title} delay={i * 0.1}>
-            <Link to={c.to} className="group block">
+            <Link href={c.to} className="group block">
               <div className="relative aspect-4/5 overflow-hidden bg-secondary md:aspect-3/4">
                 <img
                   src={c.image}
@@ -102,8 +103,7 @@ export function BestSellersSection() {
       <div className="mb-12 flex flex-wrap items-end justify-between gap-4">
         <SectionHeading eyebrow="Best Sellers" title="The shirts worn most" />
         <Reveal>
-          <Link
-            to="/shop"
+          <Link href="/shop"
             className="link-underline text-[11px] font-medium tracking-[0.18em] uppercase"
           >
             View all
@@ -145,8 +145,7 @@ export function LinenStorySection() {
                 className="h-full w-full object-cover"
               />
             </div>
-            <Link
-              to="/linen-story"
+            <Link href="/linen-story"
               className="mt-7 inline-block border-b border-foreground pb-1 text-[11px] font-medium tracking-[0.18em] uppercase"
             >
               Read the linen story
@@ -201,8 +200,7 @@ export function CampaignSection() {
             A refined collection of breathable shirts created for boardrooms, celebrations, travel
             and everyday summer dressing.
           </p>
-          <Link
-            to="/shop"
+          <Link href="/shop"
             className="mt-8 inline-block min-h-12 bg-[oklch(0.977_0.006_85)] px-8 py-3.5 text-[11px] font-medium tracking-[0.18em] text-foreground uppercase transition-opacity hover:opacity-85"
           >
             Explore the Collection
@@ -225,7 +223,7 @@ export function ShopByColour() {
       <ul className="grid grid-cols-3 gap-x-4 gap-y-8 sm:grid-cols-5 lg:grid-cols-9">
         {colours.map((c, i) => (
           <Reveal as="li" key={c.slug} delay={Math.min(i, 6) * 0.04}>
-            <Link to="/shop" search={{ colour: c.slug }} className="group block text-center">
+            <Link href="/shop"  className="group block text-center">
               <span
                 className="mx-auto block aspect-square w-full max-w-16 rounded-full border border-border transition-transform duration-500 group-hover:scale-[1.07]"
                 style={{ backgroundColor: c.hex }}
@@ -290,7 +288,7 @@ export function LookbookTeaser() {
         <div className="mb-12 flex flex-wrap items-end justify-between gap-4">
           <SectionHeading eyebrow="Lookbook" title="Five ways to wear linen" />
           <Reveal>
-            <Link to="/lookbook" className="link-underline text-[11px] font-medium tracking-[0.18em] uppercase">
+            <Link href="/lookbook" className="link-underline text-[11px] font-medium tracking-[0.18em] uppercase">
               View the Lookbook
             </Link>
           </Reveal>
@@ -302,7 +300,7 @@ export function LookbookTeaser() {
               delay={i * 0.06}
               className={i === 0 ? "md:col-span-2 md:row-span-2" : "md:col-span-2"}
             >
-              <Link to="/lookbook" className="group block">
+              <Link href="/lookbook" className="group block">
                 <div className={`overflow-hidden bg-secondary ${i === 0 ? "aspect-4/5 md:aspect-4/5" : "aspect-4/5"}`}>
                   <img
                     src={l.image}

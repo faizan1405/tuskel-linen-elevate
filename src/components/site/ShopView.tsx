@@ -1,3 +1,4 @@
+"use client";
 import { useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { colours, products as allProducts, type Fabric, type Product } from "@/lib/products";
