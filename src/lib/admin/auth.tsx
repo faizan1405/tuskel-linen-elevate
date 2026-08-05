@@ -1,13 +1,10 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-// ─── Admin credentials ─────────────────────────────────────────────────────────────
-//
-// PROTOTYPE: hardcoded credentials. Replace with a real auth provider (Clerk/Descope)
-// before shipping. These are demo credentials for the local admin panel only.
+import { CLIENT_ENV } from "@/lib/env";
 
 export const ADMIN_CREDENTIALS = {
-  email: "admin@tuskel.com",
-  password: "Tuskel@2026",
+  email: CLIENT_ENV.NEXT_PUBLIC_ADMIN_EMAIL,
+  password: CLIENT_ENV.NEXT_PUBLIC_ADMIN_PASSWORD,
 } as const;
 
 interface AdminAuthValue {

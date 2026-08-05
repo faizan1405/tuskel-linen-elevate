@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { AdminAuthProvider, useAdminAuth } from "@/lib/admin/auth";
+import { AdminAuthProvider, useAdminAuth, ADMIN_CREDENTIALS } from "@/lib/admin/auth";
 import {
   Sidebar,
   SidebarContent,
@@ -83,7 +83,7 @@ function AdminSidebarInner() {
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">Admin</p>
-                <p className="text-xs text-muted-foreground truncate">admin@tuskel.com</p>
+                <p className="text-xs text-muted-foreground truncate">{ADMIN_CREDENTIALS.email}</p>
               </div>
               <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
             </button>
@@ -161,7 +161,7 @@ function AdminLogin() {
             <label className="text-sm font-medium">Email</label>
             <Input
               type="email"
-              placeholder="admin@tuskel.com"
+              placeholder={ADMIN_CREDENTIALS.email}
               value={email}
               onChange={(e) => { setEmail(e.target.value); setError(""); }}
               autoComplete="email"
@@ -185,7 +185,7 @@ function AdminLogin() {
           </Button>
         </form>
         <p className="text-center text-xs text-muted-foreground">
-          Demo: <span className="font-mono">admin@tuskel.com</span> / <span className="font-mono">Tuskel@2026</span>
+          Demo: <span className="font-mono">{ADMIN_CREDENTIALS.email}</span> / <span className="font-mono">{ADMIN_CREDENTIALS.password}</span>
         </p>
       </div>
     </div>
