@@ -4,8 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ArrowLeft, LogOut, User, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-
+import { GoogleSignInButton } from "@/components/site/GoogleSignInButton";
 
 export default function Page() {
   const { user, signOut, hydrated } = useAuth();
@@ -25,14 +24,19 @@ export default function Page() {
         <Breadcrumbs items={[{ label: "Account" }]} />
         <h1 className="mt-4 font-display text-4xl font-light md:text-5xl">My Account</h1>
         <p className="mt-4 text-[14px] text-muted-foreground max-w-md">
-          Sign in to save your wishlist, track orders, and enjoy a personalised shopping experience.
+          Sign in with Google to save your wishlist, track orders, and enjoy a personalised shopping experience.
         </p>
-        <Link href="/">
-          <Button variant="outline" className="mt-6 gap-2 text-[11px] tracking-[0.16em] uppercase">
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to Shopping
-          </Button>
-        </Link>
+        <div className="mt-8 max-w-xs">
+          <GoogleSignInButton />
+        </div>
+        <div className="mt-6">
+          <Link href="/">
+            <Button variant="outline" className="gap-2 text-[11px] tracking-[0.16em] uppercase">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to Shopping
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
