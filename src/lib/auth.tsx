@@ -3,11 +3,13 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 export interface Account {
   name: string;
   email: string;
+  picture?: string;
 }
 
 interface AuthValue {
   user: Account | null;
   signIn: (email: string, name?: string) => void;
+  signInWithGoogle: (profile: { name: string; email: string; picture?: string }) => void;
   signOut: () => void;
   hydrated: boolean;
 }
@@ -28,12 +30,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setHydrated(true);
   }, []);
 
+  const buildAccount = (params: { name: string; email: string; picture?: string }): Account => {
+    const base: Account = { name: params.name, email: params.email };
+    if (params.picture) base.picture = params.picture;
+    return base;
+  };
+
   const value = useMemo<AuthValue>(
     () => ({
       user,
       hydrated,
       signIn: (email, name) => {
-        const account: Account = { email, name: name || email.split("@")[0] || "Guest" };
+        const account: Account = {
+          email,
+          name: name || email.split("@")[0] || "Guest",
+        };
+        setUser(account);
+        window.localStorage.setItem("tuskel.account", JSON.stringify(account));
+      },
+      signInWithGoogle: (profile) => {
+        const account = buildAccount(profile);
         setUser(account);
         window.localStorage.setItem("tuskel.account", JSON.stringify(account));
       },

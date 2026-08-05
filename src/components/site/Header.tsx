@@ -4,10 +4,12 @@ import { AnimatePresence, motion } from "motion/react";
 import { Heart, Menu, Search, ShoppingBag, User, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { colours, products } from "@/lib/products";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { inr } from "@/lib/format";
+import { LoginModal } from "@/components/site/LoginModal";
 
 const NAV = [
   { label: "Home", to: "/" },
@@ -36,7 +38,9 @@ export function Header() {
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const { cartCount, wishlist, setCartOpen, hydrated } = useStore();
+  const { user, hydrated: authHydrated } = useAuth();
 
   const overHero = pathname === "/";
 
@@ -122,13 +126,33 @@ export function Header() {
           >
             <Search className="h-[18px] w-[18px]" />
           </button>
-          <Link
-            to="/account"
-            aria-label="Account"
-            className="hidden h-11 w-11 items-center justify-center sm:flex"
-          >
-            <User className="h-[18px] w-[18px]" />
-          </Link>
+          {authHydrated && user ? (
+            <Link
+              to="/account"
+              aria-label={`Account, signed in as ${user.name}`}
+              className="hidden h-11 w-11 items-center justify-center sm:flex"
+            >
+              {user.picture ? (
+                <img
+                  src={user.picture}
+                  alt={user.name}
+                  referrerPolicy="no-referrer"
+                  className="h-7 w-7 rounded-full object-cover border border-border"
+                />
+              ) : (
+                <User className="h-[18px] w-[18px]" />
+              )}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              aria-label="Sign in"
+              onClick={() => setLoginOpen(true)}
+              className="hidden h-11 w-11 items-center justify-center sm:flex"
+            >
+              <User className="h-[18px] w-[18px]" />
+            </button>
+          )}
           <Link
             to="/wishlist"
             aria-label={`Wishlist${hydrated && wishlist.length ? `, ${wishlist.length} saved` : ""}`}
@@ -224,6 +248,7 @@ export function Header() {
       </AnimatePresence>
 
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
     </header>
   );
 }
