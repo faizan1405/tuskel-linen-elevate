@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,9 +10,6 @@ import { GoogleSignInButton } from "@/components/site/GoogleSignInButton";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { cn } from "@/lib/utils";
-
-type Tab = "google" | "email";
 
 interface LoginModalProps {
   open: boolean;
@@ -20,7 +17,6 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ open, onOpenChange }: LoginModalProps) {
-  const [tab, setTab] = useState<Tab>("google");
   const [email, setEmail] = useState("");
   const { user, hydrated, signIn, signOut } = useAuth();
 
@@ -31,10 +27,9 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
     }
   }, [open, hydrated, user, onOpenChange]);
 
-  // Reset tab when dialog opens
+  // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      setTab("google");
       setEmail("");
     }
   }, [open]);
