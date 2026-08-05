@@ -23,11 +23,11 @@ export const Route = createFileRoute("/")({
         content:
           "Made for warmer days. Designed for sharper ones. Shop Tuskel premium linen shirts for men — breathable, refined and shipped free across India.",
       },
-      { property: "og:title", content: "Tuskel — Premium Men's Linen Shirts" },
+      { property: "og:title", content: "Tuskel — Premium Men's Pure Linen & Linen Blend Shirts" },
       {
         property: "og:description",
         content:
-          "Premium linen shirts crafted for effortless comfort, refined style and modern living.",
+          "Made for warmer days. Designed for sharper ones. Shop Tuskel premium linen shirts for men — breathable, refined and shipped free across India.",
       },
       { property: "og:url", content: "/" },
     ],

@@ -85,16 +85,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Tuskel — Premium Men's Linen Shirts" },
+      { title: "Tuskel — Premium Men's Pure Linen & Linen Blend Shirts" },
       {
         name: "description",
         content:
-          "Premium linen and linen-blend shirts for men, crafted for effortless comfort and refined summer style.",
+          "Made for warmer days. Designed for sharper ones. Shop Tuskel premium linen shirts for men — breathable, refined and shipped free across India.",
       },
       { property: "og:site_name", content: "Tuskel" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#F7F4EE" },
+      { property: "og:title", content: "Tuskel — Premium Men's Pure Linen & Linen Blend Shirts" },
+      { name: "twitter:title", content: "Tuskel — Premium Men's Pure Linen & Linen Blend Shirts" },
+      { property: "og:description", content: "Made for warmer days. Designed for sharper ones. Shop Tuskel premium linen shirts for men — breathable, refined and shipped free across India." },
+      { name: "twitter:description", content: "Made for warmer days. Designed for sharper ones. Shop Tuskel premium linen shirts for men — breathable, refined and shipped free across India." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3c5381d3-6657-4a53-b46f-ac041dafa268/id-preview-80ae5749--9aa71c5e-9e7a-4c98-a80b-25a71015db0b.lovable.app-1785918420971.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3c5381d3-6657-4a53-b46f-ac041dafa268/id-preview-80ae5749--9aa71c5e-9e7a-4c98-a80b-25a71015db0b.lovable.app-1785918420971.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
