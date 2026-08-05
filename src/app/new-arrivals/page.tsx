@@ -11,7 +11,7 @@ export default function Page() {
     <div className="pb-24">
       <Reveal>
         <div className="relative h-[46svh] min-h-[320px] overflow-hidden">
-          <img src={campaign} alt="Summer 2026 campaign imagery" loading="lazy" className="h-full w-full object-cover" />
+          <img src={campaign.src} alt="Summer 2026 campaign imagery" loading="lazy" className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-[oklch(0.22_0.006_60/0.35)]" />
           <div className="shell absolute inset-0 flex flex-col justify-center text-[oklch(0.977_0.006_85)]">
             <p className="text-[11px] font-medium tracking-[0.28em] uppercase opacity-85">Summer 2026</p>

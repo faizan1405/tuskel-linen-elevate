@@ -23,7 +23,7 @@ export function HomeHero() {
         transition={{ duration: 2.2, ease }}
       >
         <img
-          src={hero}
+          src={hero.src}
           alt="Man wearing a Tuskel soft turquoise pure linen shirt in a sunlit travertine courtyard"
           width={1600}
           height={1104}

@@ -19,7 +19,7 @@ export default function Page() {
         />
         <Reveal>
           <div className="aspect-4/3 overflow-hidden bg-secondary">
-            <img src={hero} alt="Man wearing a vanilla cream pure linen shirt" loading="lazy" className="h-full w-full object-cover" />
+            <img src={hero.src} alt="Man wearing a vanilla cream pure linen shirt" loading="lazy" className="h-full w-full object-cover" />
           </div>
         </Reveal>
       </div>

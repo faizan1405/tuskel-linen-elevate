@@ -53,14 +53,14 @@ export function CollectionCards() {
     {
       title: "Pure Linen",
       line: "Natural breathability. Timeless refinement.",
-      image: collectionPure,
+      image: collectionPure.src,
       to: "/collections/pure-linen" as const,
       alt: "Man in a vanilla cream pure linen shirt against a limewashed wall",
     },
     {
       title: "Linen Blend",
       line: "Everyday softness with effortless structure.",
-      image: collectionBlend,
+      image: collectionBlend.src,
       to: "/collections/linen-blend" as const,
       alt: "Man in a classic white linen blend shirt seated in a sunlit interior",
     },
@@ -139,7 +139,7 @@ export function LinenStorySection() {
             </p>
             <div className="mt-8 aspect-16/11 overflow-hidden">
               <img
-                src={weave}
+                src={weave.src}
                 alt="Macro view of a natural linen weave with visible slubs"
                 loading="lazy"
                 className="h-full w-full object-cover"
@@ -181,7 +181,7 @@ export function CampaignSection() {
   return (
     <section ref={ref} className="relative h-[80svh] min-h-[480px] overflow-hidden">
       <motion.img
-        src={campaign}
+        src={campaign.src}
         alt="Two men in powder blue and cream linen shirts walking through a sunlit colonnade"
         style={{ y }}
         loading="lazy"
@@ -242,9 +242,9 @@ export function ShopByColour() {
 
 export function CraftSection() {
   const items = [
-    { image: collar, alt: "Close-up of a linen shirt collar and top button", title: "The collar", copy: "Lightly fused so it holds its line without stiffness." },
-    { image: cuff, alt: "Close-up of a linen shirt cuff with a mother of pearl button", title: "The cuff", copy: "Two-button adjustment, sized to sit clean under a watch." },
-    { image: weave, alt: "Macro of the linen weave", title: "The weave", copy: "Open enough to breathe, dense enough to keep its shape." },
+    { image: collar.src, alt: "Close-up of a linen shirt collar and top button", title: "The collar", copy: "Lightly fused so it holds its line without stiffness." },
+    { image: cuff.src, alt: "Close-up of a linen shirt cuff with a mother of pearl button", title: "The cuff", copy: "Two-button adjustment, sized to sit clean under a watch." },
+    { image: weave.src, alt: "Macro of the linen weave", title: "The weave", copy: "Open enough to breathe, dense enough to keep its shape." },
   ];
   return (
     <section className="shell pb-20 md:pb-28">
@@ -276,11 +276,11 @@ export function CraftSection() {
 
 export function LookbookTeaser() {
   const looks = [
-    { image: lookOffice, alt: "Man in a powder blue linen shirt in a modern office", label: "Work" },
-    { image: lookWeekend, alt: "Man in an aqua mist linen shirt on a sunlit street", label: "Weekend" },
-    { image: lookTravel, alt: "Man in a vanilla cream linen shirt carrying a travel bag", label: "Travel" },
-    { image: lookEvening, alt: "Man in a midnight black linen shirt at dusk", label: "Evening" },
-    { image: lookSmart, alt: "Man in a soft cream linen shirt in a sunlit cafe", label: "Celebrations" },
+    { image: lookOffice.src, alt: "Man in a powder blue linen shirt in a modern office", label: "Work" },
+    { image: lookWeekend.src, alt: "Man in an aqua mist linen shirt on a sunlit street", label: "Weekend" },
+    { image: lookTravel.src, alt: "Man in a vanilla cream linen shirt carrying a travel bag", label: "Travel" },
+    { image: lookEvening.src, alt: "Man in a midnight black linen shirt at dusk", label: "Evening" },
+    { image: lookSmart.src, alt: "Man in a soft cream linen shirt in a sunlit cafe", label: "Celebrations" },
   ];
   return (
     <section className="border-t border-border bg-secondary/40">
@@ -368,12 +368,12 @@ export function ReviewsSection() {
 
 export function CommunityGallery() {
   const images = [
-    { src: lookWeekend, alt: "Aqua mist linen shirt worn on a sunlit street" },
-    { src: lookOffice, alt: "Powder blue linen shirt worn at work" },
-    { src: cuff, alt: "Cuff detail of a cream linen shirt" },
-    { src: lookTravel, alt: "Vanilla cream linen shirt worn while travelling" },
-    { src: lookEvening, alt: "Midnight black linen shirt worn at dusk" },
-    { src: lookSmart, alt: "Soft cream linen shirt worn in a cafe" },
+    { src: lookWeekend.src, alt: "Aqua mist linen shirt worn on a sunlit street" },
+    { src: lookOffice.src, alt: "Powder blue linen shirt worn at work" },
+    { src: cuff.src, alt: "Cuff detail of a cream linen shirt" },
+    { src: lookTravel.src, alt: "Vanilla cream linen shirt worn while travelling" },
+    { src: lookEvening.src, alt: "Midnight black linen shirt worn at dusk" },
+    { src: lookSmart.src, alt: "Soft cream linen shirt worn in a cafe" },
   ];
   return (
     <section className="shell pb-20 md:pb-28">
