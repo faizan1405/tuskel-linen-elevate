@@ -1,24 +1,60 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { HomeHero } from "@/components/home/HomeHero";
+import {
+  BenefitsStrip,
+  BestSellersSection,
+  CampaignSection,
+  CollectionCards,
+  CommunityGallery,
+  CraftSection,
+  LinenStorySection,
+  LookbookTeaser,
+  ReviewsSection,
+  ShopByColour,
+} from "@/components/home/HomeSections";
+import { Newsletter } from "@/components/site/Newsletter";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Tuskel — Premium Men's Pure Linen & Linen Blend Shirts" },
+      {
+        name: "description",
+        content:
+          "Made for warmer days. Designed for sharper ones. Shop Tuskel premium linen shirts for men — breathable, refined and shipped free across India.",
+      },
+      { property: "og:title", content: "Tuskel — Premium Men's Linen Shirts" },
+      {
+        property: "og:description",
+        content:
+          "Premium linen shirts crafted for effortless comfort, refined style and modern living.",
+      },
+      { property: "og:url", content: "/" },
+    ],
+    links: [{ rel: "canonical", href: "/" }],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <>
+      <HomeHero />
+      <BenefitsStrip />
+      <CollectionCards />
+      <BestSellersSection />
+      <LinenStorySection />
+      <CampaignSection />
+      <ShopByColour />
+      <CraftSection />
+      <LookbookTeaser />
+      <ReviewsSection />
+      <CommunityGallery />
+      <section className="border-t border-border py-20 md:py-24">
+        <div className="shell">
+          <Newsletter />
+        </div>
+      </section>
+    </>
   );
 }
