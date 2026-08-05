@@ -10,33 +10,89 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as NewArrivalsRouteImport } from './routes/new-arrivals'
+import { Route as ShopRouteImport } from './routes/shop'
+import { Route as CollectionsLinenBlendRouteImport } from './routes/collections/linen-blend'
+import { Route as CollectionsPureLinenRouteImport } from './routes/collections/pure-linen'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewArrivalsRoute = NewArrivalsRouteImport.update({
+  id: '/new-arrivals',
+  path: '/new-arrivals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollectionsLinenBlendRoute = CollectionsLinenBlendRouteImport.update({
+  id: '/collections/linen-blend',
+  path: '/collections/linen-blend',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollectionsPureLinenRoute = CollectionsPureLinenRouteImport.update({
+  id: '/collections/pure-linen',
+  path: '/collections/pure-linen',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/new-arrivals': typeof NewArrivalsRoute
+  '/shop': typeof ShopRoute
+  '/collections/linen-blend': typeof CollectionsLinenBlendRoute
+  '/collections/pure-linen': typeof CollectionsPureLinenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/new-arrivals': typeof NewArrivalsRoute
+  '/shop': typeof ShopRoute
+  '/collections/linen-blend': typeof CollectionsLinenBlendRoute
+  '/collections/pure-linen': typeof CollectionsPureLinenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/new-arrivals': typeof NewArrivalsRoute
+  '/shop': typeof ShopRoute
+  '/collections/linen-blend': typeof CollectionsLinenBlendRoute
+  '/collections/pure-linen': typeof CollectionsPureLinenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/new-arrivals'
+    | '/shop'
+    | '/collections/linen-blend'
+    | '/collections/pure-linen'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/new-arrivals'
+    | '/shop'
+    | '/collections/linen-blend'
+    | '/collections/pure-linen'
+  id:
+    | '__root__'
+    | '/'
+    | '/new-arrivals'
+    | '/shop'
+    | '/collections/linen-blend'
+    | '/collections/pure-linen'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  NewArrivalsRoute: typeof NewArrivalsRoute
+  ShopRoute: typeof ShopRoute
+  CollectionsLinenBlendRoute: typeof CollectionsLinenBlendRoute
+  CollectionsPureLinenRoute: typeof CollectionsPureLinenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +104,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/new-arrivals': {
+      id: '/new-arrivals'
+      path: '/new-arrivals'
+      fullPath: '/new-arrivals'
+      preLoaderRoute: typeof NewArrivalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/collections/linen-blend': {
+      id: '/collections/linen-blend'
+      path: '/collections/linen-blend'
+      fullPath: '/collections/linen-blend'
+      preLoaderRoute: typeof CollectionsLinenBlendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/collections/pure-linen': {
+      id: '/collections/pure-linen'
+      path: '/collections/pure-linen'
+      fullPath: '/collections/pure-linen'
+      preLoaderRoute: typeof CollectionsPureLinenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  NewArrivalsRoute: NewArrivalsRoute,
+  ShopRoute: ShopRoute,
+  CollectionsLinenBlendRoute: CollectionsLinenBlendRoute,
+  CollectionsPureLinenRoute: CollectionsPureLinenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
