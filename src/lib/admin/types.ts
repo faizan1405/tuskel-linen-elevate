@@ -80,9 +80,38 @@ export interface SiteConfig {
   email: string;
 }
 
+// ─── Inquiries ────────────────────────────────────────────────────────────────
+
+export interface AdminInquiry {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+  status: "new" | "read" | "replied" | "closed";
+  repliedAt?: string;
+  createdAt: string;
+}
+
+export const INQUIRY_STATUSES: { value: AdminInquiry["status"]; label: string; color: string }[] = [
+  { value: "new",    label: "New",    color: "bg-blue-100 text-blue-800" },
+  { value: "read",   label: "Read",   color: "bg-gray-100 text-gray-800" },
+  { value: "replied",label: "Replied",color: "bg-green-100 text-green-800" },
+  { value: "closed", label: "Closed", color: "bg-red-100 text-red-800" },
+];
+
 // ─── AdminProduct (extends Product with editable fields) ──────────────────────
 
 export interface AdminProduct extends Product {
   _stock?: number;
   _status?: "active" | "draft" | "archived";
+}
+
+// ─── Auth types ────────────────────────────────────────────────────────────────
+
+export interface AdminAuthValue {
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  logout: () => Promise<void>;
 }

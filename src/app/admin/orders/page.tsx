@@ -11,10 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Search, Eye } from "lucide-react";
 import { ORDER_STATUSES, ORDER_STATUS_FLOW, type AdminOrder, type OrderStatus } from "@/lib/admin/types";
 import { adminGetOrders, adminUpdateOrderStatus } from "@/lib/admin/server";
+import { inr } from "@/lib/format";
 import { formatDateShort } from "@/lib/admin/format";
-import { Search, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS_ALL = "all";
@@ -78,7 +79,7 @@ function OrderDetailModal({ order, onClose }: { order: AdminOrder; onClose: () =
               {order.items.map((it, i) => (
                 <div key={i} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
                   <span>{it.name} <span className="text-muted-foreground">x {it.qty}</span></span>
-                  <span className="font-medium">{"₹"}{(it.price * it.qty).toLocaleString("en-IN")}</span>
+                  <span className="font-medium">{inr(it.price * it.qty)}</span>
                 </div>
               ))}
             </div>
@@ -205,7 +206,7 @@ export default function OrdersPage() {
                       <TableCell className="text-sm">{formatDateShort(o.placedOn)}</TableCell>
                       <TableCell className="text-sm">{o.items.reduce((s: number, it: any) => s + it.qty, 0)} items</TableCell>
                       <TableCell><Badge variant="secondary" className={ORDER_STATUSES.find((s) => s.value === o.status)?.color}>{o.status}</Badge></TableCell>
-                      <TableCell className="text-right text-sm font-medium">{"₹"}{o.total.toLocaleString("en-IN")}</TableCell>
+                      <TableCell className="text-right text-sm font-medium">{inr(o.total)}</TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon" onClick={() => setViewOrder(o)}>
                           <Eye className="h-4 w-4" />

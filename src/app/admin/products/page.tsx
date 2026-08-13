@@ -90,11 +90,11 @@ function ProductModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>MRP (Γé╣)</Label>
+              <Label>MRP (₹)</Label>
               <Input type="number" value={form.mrp ?? 0} onChange={(e) => setForm({ ...form, mrp: Number(e.target.value) })} />
             </div>
             <div className="space-y-2">
-              <Label>Price (Γé╣)</Label>
+              <Label>Price (₹)</Label>
               <Input type="number" value={form.price ?? 0} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
             </div>
           </div>
@@ -126,7 +126,7 @@ export default function ProductsPage(props: any) {
   });
 
   const createMutation = useMutation({
-    mutationFn: (vars: { data: Omit<AdminProduct, "id"> }) => adminCreateProduct({ data: vars.data }),
+    mutationFn: adminCreateProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
       toast.success("Product created");
@@ -164,11 +164,19 @@ export default function ProductsPage(props: any) {
 
   const handleSave = (p: AdminProduct) => {
     if (isAdding) {
-      createMutation.mutate({ data: { name: p.name, fabric: p.fabric, price: p.price, mrp: p.mrp, fabricLabel: p.fabricLabel, _status: p._status || "draft", summary: p.summary } as Omit<AdminProduct, "id"> });
+      createMutation.mutate({
+        name: p.name, fabric: p.fabric, fabricLabel: p.fabricLabel,
+        colorName: p.colorName, colorSlug: p.colorSlug, swatch: p.swatch,
+        mrp: p.mrp, price: p.price, summary: p.summary, images: p.images,
+        sizes: p.sizes, details: p.details, care: p.care, fit: p.fit,
+        modelNote: p.modelNote, newArrival: p.newArrival, bestSeller: p.bestSeller,
+        popularity: p.popularity, addedOn: p.addedOn, _stock: p._stock ?? 0,
+        _status: p._status || "draft",
+      });
       setIsAdding(false);
     } else {
       if (!p.slug) return;
-      updateMutation.mutate({ slug: p.slug, data: { name: p.name, fabric: p.fabric, price: p.price, mrp: p.mrp, fabricLabel: p.fabricLabel, _status: p._status || "draft", summary: p.summary } as any });
+      updateMutation.mutate({ slug: p.slug, data: p });
     }
     setEditingProduct(null);
   };
@@ -227,7 +235,7 @@ export default function ProductsPage(props: any) {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">LoadingΓÇª</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No products found.</TableCell></TableRow>
                 ) : (

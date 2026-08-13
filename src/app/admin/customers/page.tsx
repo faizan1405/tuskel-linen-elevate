@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AdminCustomer } from "@/lib/admin/types";
 import { adminGetCustomers, adminGetOrders } from "@/lib/admin/server";
 import { formatINR, formatDate } from "@/lib/admin/format";
 import { Search, Eye, User } from "lucide-react";
@@ -18,7 +19,7 @@ import { Search, Eye, User } from "lucide-react";
 export default function CustomersPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [viewCustomer, setViewCustomer] = useState<(import("@/lib/admin/types").AdminCustomer & { id: string }) | null>(null);
+  const [viewCustomer, setViewCustomer] = useState<AdminCustomer | null>(null);
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ["admin", "customers"],

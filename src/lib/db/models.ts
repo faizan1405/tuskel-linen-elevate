@@ -92,3 +92,31 @@ const siteConfigSchema = new Schema<ISiteConfig>({
 export const SiteConfigModel: Model<ISiteConfig> =
   (mongoose.models as Record<string, Model<ISiteConfig>>)["SiteConfig"] ??
   mongoose.model<ISiteConfig>("SiteConfig", siteConfigSchema);
+
+// ─── Inquiries / Contact ───────────────────────────────────────────────────────
+
+export interface IInquiry extends Document {
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+  status: "new" | "read" | "replied" | "closed";
+  repliedAt?: string;
+  createdAt: string;
+}
+
+const inquirySchema = new Schema<IInquiry>({
+  name: { type: String, required: true, trim: true },
+  email: { type: String, required: true, trim: true },
+  phone: { type: String, default: "" },
+  subject: { type: String, required: true, trim: true },
+  message: { type: String, required: true, trim: true },
+  status: { type: String, enum: ["new", "read", "replied", "closed"], default: "new", index: true },
+  repliedAt: { type: String },
+  createdAt: { type: String, required: true, default: () => new Date().toISOString(), index: true },
+}, { collection: "inquiries", timestamps: false });
+
+export const InquiryModel: Model<IInquiry> =
+  (mongoose.models as Record<string, Model<IInquiry>>)["Inquiry"] ??
+  mongoose.model<IInquiry>("Inquiry", inquirySchema);

@@ -36,6 +36,15 @@ function getEnv() {
 export const ENV = getEnv();
 
 /**
+ * Server-only admin credentials. NEVER exposed to the client bundle.
+ * Defaults are hardcoded fallbacks for local development only.
+ */
+export const ADMIN_CREDENTIALS: { email: string; password: string } = {
+  email: process.env["ADMIN_EMAIL"] || "admin@tuskel.com",
+  password: process.env["ADMIN_PASSWORD"] || "Tuskel@2026",
+};
+
+/**
  * Client-safe env vars. NEXT_PUBLIC_ prefixed vars are injected by Next.js into the
  * client bundle. Never put secrets here — only public identifiers like OAuth
  * client IDs.
@@ -43,10 +52,6 @@ export const ENV = getEnv();
 export const CLIENT_ENV = {
   // @ts-expect-error Next.js requires dot notation for inline replacement
   NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
-  // @ts-expect-error Next.js requires dot notation for inline replacement
-  NEXT_PUBLIC_ADMIN_EMAIL: process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@tuskel.com",
-  // @ts-expect-error Next.js requires dot notation for inline replacement
-  NEXT_PUBLIC_ADMIN_PASSWORD: process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "Tuskel@2026",
 } as const;
 
 if (!CLIENT_ENV.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {

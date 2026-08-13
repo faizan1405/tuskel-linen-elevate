@@ -1,14 +1,13 @@
 "use client";
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { AdminAuthProvider, useAdminAuth, ADMIN_CREDENTIALS } from "@/lib/admin/auth";
+import { AdminAuthProvider, useAdminAuth, type AdminAuthValue } from "@/lib/admin/auth";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -21,6 +20,7 @@ import {
   Package,
   ShoppingCart,
   Users,
+  Inbox,
   Settings,
   ChevronUp,
 } from "lucide-react";
@@ -38,11 +38,12 @@ const navItems = [
   { title: "Products", href: "/admin/products", icon: Package },
   { title: "Orders", href: "/admin/orders", icon: ShoppingCart },
   { title: "Customers", href: "/admin/customers", icon: Users },
+  { title: "Inquiries", href: "/admin/inquiries", icon: Inbox },
+  { title: "Inventory", href: "/admin/inventory", icon: Package },
   { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 function AdminSidebarInner() {
-  
   const { logout } = useAdminAuth();
   const pathname = usePathname();
 
@@ -83,7 +84,7 @@ function AdminSidebarInner() {
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">Admin</p>
-                <p className="text-xs text-muted-foreground truncate">{ADMIN_CREDENTIALS.email}</p>
+                <p className="text-xs text-muted-foreground truncate">admin@tuskel.com</p>
               </div>
               <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
             </button>
@@ -161,7 +162,7 @@ function AdminLogin() {
             <label className="text-sm font-medium">Email</label>
             <Input
               type="email"
-              placeholder={ADMIN_CREDENTIALS.email}
+              placeholder="admin@tuskel.com"
               value={email}
               onChange={(e) => { setEmail(e.target.value); setError(""); }}
               autoComplete="email"
@@ -184,9 +185,6 @@ function AdminLogin() {
             {loading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
-        <p className="text-center text-xs text-muted-foreground">
-          Demo: <span className="font-mono">{ADMIN_CREDENTIALS.email}</span> / <span className="font-mono">{ADMIN_CREDENTIALS.password}</span>
-        </p>
       </div>
     </div>
   );

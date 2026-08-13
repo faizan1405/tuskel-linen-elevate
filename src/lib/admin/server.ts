@@ -1,11 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { connectDb, ProductModel, OrderModel, CustomerModel, SiteConfigModel } from "@/lib/db/models";
-
-// `strict: false` relaxes the handler parameter typing so we can accept `any`
-// and run our own Zod validation inside. The runtime behavior (including the
-// compiled fetcher) is the same either way.
+import { connectDb, ProductModel, OrderModel, CustomerModel, SiteConfigModel, InquiryModel } from "@/lib/db/models";
+import { uploadImage, deleteImage } from "@/lib/cloudinary";
 
 // ─── Products ────────────────────────────────────────────────────────────────
 
@@ -41,25 +38,49 @@ export async function adminCreateProduct(data: any) {
 }
 
 export async function adminUpdateProduct(data: any) {
-    const { slug, ...rest } = z.object({
+    const { slug, data: updateFields } = z.object({
       slug: z.string(),
       data: z.object({
         name: z.string().optional(), fabric: z.enum(["pure-linen","linen-blend"]).optional(),
-        fabricLabel: z.string().optional(), mrp: z.number().positive().optional(),
+        fabricLabel: z.string().optional(), colorName: z.string().optional(), colorSlug: z.string().optional(),
+        swatch: z.string().optional(), mrp: z.number().positive().optional(),
         price: z.number().positive().optional(), summary: z.string().optional(),
-        _status: z.enum(["active","draft","archived"]).optional(),
+        images: z.array(z.string()).optional(), sizes: z.array(z.string()).optional(),
+        details: z.array(z.string()).optional(), care: z.array(z.string()).optional(),
+        fit: z.string().optional(), modelNote: z.string().optional(),
+        newArrival: z.boolean().optional(), bestSeller: z.boolean().optional(),
+        popularity: z.number().optional(), addedOn: z.string().optional(),
+        _stock: z.number().optional(), _status: z.enum(["active","draft","archived"]).optional(),
       }).partial(),
     }).parse(data);
     await connectDb();
-    const doc = await ProductModel.findOneAndUpdate({ slug }, { $set: rest }, { new: true }).lean();
+    const doc = await ProductModel.findOneAndUpdate({ slug }, { $set: updateFields }, { new: true }).lean();
     return doc;
 }
 
 export async function adminDeleteProduct(data: any) {
     const { slug } = z.object({ slug: z.string() }).parse(data);
     await connectDb();
+    const doc = await ProductModel.findOne({ slug }).lean();
+    if (doc?.images) {
+      for (const url of doc.images) {
+        try {
+          const pubId = (url.split("/").slice(-1)[0] || "").split(".")[0];
+          if (pubId) await deleteImage(pubId);
+        } catch {}
+      }
+    }
     const result = await ProductModel.deleteOne({ slug });
     return { deleted: result.deletedCount > 0 };
+}
+
+export async function adminUploadImage(data: any) {
+    const { image, folder } = z.object({
+      image: z.string(),
+      folder: z.string().default("tuskel/products"),
+    }).parse(data);
+    const result = await uploadImage(image, { folder });
+    return { url: result.secure_url, publicId: result.public_id };
 }
 
 // ─── Orders ──────────────────────────────────────────────────────────────────
@@ -88,6 +109,32 @@ export async function adminUpdateOrderStatus(data: any) {
 export async function adminGetCustomers() {
     await connectDb();
     return CustomerModel.find().sort({createdAt: -1}).lean().then(docs => docs.map((d: any) => ({ ...d, id: String(d._id) })));
+}
+
+// ─── Inquiries ───────────────────────────────────────────────────────────────
+
+export async function adminGetInquiries() {
+    await connectDb();
+    return InquiryModel.find().sort({createdAt: -1}).lean().then(docs => docs.map((d: any) => ({ ...d, id: String(d._id) })));
+}
+
+export async function adminUpdateInquiryStatus(data: any) {
+    const { id, status } = z.object({
+      id: z.string(),
+      status: z.enum(["new", "read", "replied", "closed"]),
+    }).parse(data);
+    await connectDb();
+    const update: Record<string, unknown> = { status };
+    if (status === "replied") update["repliedAt"] = new Date().toISOString().split("T")[0];
+    const doc = await InquiryModel.findByIdAndUpdate(id, update, { new: true }).lean();
+    return doc;
+}
+
+export async function adminDeleteInquiry(data: any) {
+    const { id } = z.object({ id: z.string() }).parse(data);
+    await connectDb();
+    const result = await InquiryModel.deleteOne({ _id: id });
+    return { deleted: result.deletedCount > 0 };
 }
 
 // ─── Dashboard stats ─────────────────────────────────────────────────────────
@@ -144,7 +191,7 @@ export async function adminGetTopProducts(data: any) {
   return Object.values(sales).sort((a, b) => b.revenue - a.revenue).slice(0, limit);
 }
 export async function adminGetRecentOrders(data: any) {
-  const limit = data?.limit ?? 8;
+  const limit = typeof data === 'number' ? data : data?.limit ?? 8;
   await connectDb();
   return OrderModel.find().sort({placedOn: -1}).limit(limit).lean();
 }

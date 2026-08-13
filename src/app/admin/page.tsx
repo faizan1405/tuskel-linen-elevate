@@ -29,14 +29,14 @@ import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, ArrowRight }
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-function KpiCard({ title, value, change, prefix }: { title: string; value: number; change: number; prefix?: string }) {
+function KpiCard({ title, value, change, currency }: { title: string; value: number; change: number; currency?: boolean }) {
   const up = change >= 0;
   return (
     <Card>
       <CardContent className="p-5">
         <p className="text-sm text-muted-foreground">{title}</p>
         <p className="mt-2 text-2xl font-medium tracking-tight">
-          {prefix}{value.toLocaleString("en-IN")}
+          {currency ? "₹" : ""}{value.toLocaleString("en-IN")}
         </p>
         <div className={`mt-2 flex items-center gap-1 text-sm ${up ? "text-green-600" : "text-red-600"}`}>
           {up ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
@@ -63,12 +63,12 @@ export default function AdminDashboard() {
 
   const { data: topProducts = [] } = useQuery({
     queryKey: ["admin", "top-products"],
-    queryFn: () => adminGetTopProducts({ data: { limit: 5 } }),
+    queryFn: () => adminGetTopProducts({ limit: 5 }),
   });
 
   const { data: recentOrders = [] } = useQuery({
     queryKey: ["admin", "recent-orders"],
-    queryFn: () => adminGetRecentOrders({ data: { limit: 5 } }),
+    queryFn: () => adminGetRecentOrders(5),
   });
 
   const revenueData = useMemo(() => {
@@ -90,10 +90,10 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard title="Total Revenue" value={s.totalRevenue} change={s.revenueChange} prefix="₹" />
+        <KpiCard title="Total Revenue" value={s.totalRevenue} change={s.revenueChange} currency />
         <KpiCard title="Total Orders" value={s.totalOrders} change={s.ordersChange} />
         <KpiCard title="Customers" value={s.totalCustomers} change={s.customersChange} />
-        <KpiCard title="Avg Order Value" value={s.avgOrderValue} change={s.aovChange} prefix="₹" />
+        <KpiCard title="Avg Order Value" value={s.avgOrderValue} change={s.aovChange} currency />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-7">

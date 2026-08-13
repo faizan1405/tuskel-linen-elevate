@@ -1,48 +1,49 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
-import { CLIENT_ENV } from "@/lib/env";
+import type { AdminAuthValue } from "./types";
 
-export const ADMIN_CREDENTIALS = {
-  email: CLIENT_ENV.NEXT_PUBLIC_ADMIN_EMAIL,
-  password: CLIENT_ENV.NEXT_PUBLIC_ADMIN_PASSWORD,
-} as const;
-
-interface AdminAuthValue {
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  logout: () => void;
-}
+export type { AdminAuthValue } from "./types";
 
 const AdminAuthContext = createContext<AdminAuthValue | null>(null);
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("tuskel.admin.auth");
-    if (stored === "1") setIsAuthenticated(true);
+    fetch("/api/admin-auth/logout", { method: "GET", cache: "no-store" })
+      .then((r) => r.ok ? setIsAuthenticated(true) : setIsAuthenticated(false))
+      .catch(() => setIsAuthenticated(false))
+      .finally(() => setChecking(false));
   }, []);
 
-  const login = async (email: string, password: string) => {
-    // Simulate network delay for realistic UX
-    await new Promise((r) => setTimeout(r, 600));
-
-    const normalizedEmail = email.trim().toLowerCase();
-    const expectedEmail = ADMIN_CREDENTIALS.email.toLowerCase();
-
-    if (normalizedEmail === expectedEmail && password === ADMIN_CREDENTIALS.password) {
+  const login: AdminAuthValue["login"] = async (email, password) => {
+    const res = await fetch("/api/admin-auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+      cache: "no-store",
+    });
+    const data = await res.json();
+    if (data.ok) {
       setIsAuthenticated(true);
-      sessionStorage.setItem("tuskel.admin.auth", "1");
       return { ok: true };
     }
-
-    return { ok: false, error: "Invalid email or password." };
+    return { ok: false as const, error: data.error || "Invalid email or password." };
   };
 
-  const logout = () => {
+  const logout: AdminAuthValue["logout"] = async () => {
+    await fetch("/api/admin-auth/logout", { method: "DELETE", cache: "no-store" });
     setIsAuthenticated(false);
-    sessionStorage.removeItem("tuskel.admin.auth");
   };
+
+  if (checking) {
+    return (
+      <div className="flex min-h-svh items-center justify-center">
+        <div className="text-sm text-muted-foreground">Loading…</div>
+      </div>
+    );
+  }
 
   return (
     <AdminAuthContext.Provider value={{ isAuthenticated, login, logout }}>
