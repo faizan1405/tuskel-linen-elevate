@@ -18,7 +18,7 @@ export async function GET(
 
     // Try MongoDB first (admin-created products take precedence)
     await connectDb();
-    const doc = await ProductModel.findOne({ slug, status: { $ne: "archived" } }).lean();
+    const doc = await ProductModel.findOne({ slug, _status: { $ne: "archived" } }).lean();
 
     if (doc) {
       return NextResponse.json({

@@ -22,17 +22,18 @@ import {
   adminGetMonthlyRevenue,
   adminGetTopProducts,
   adminGetRecentOrders,
+  adminGetProducts,
 } from "@/lib/admin/server";
 import { ORDER_STATUSES } from "@/lib/admin/types";
 import { formatDateShort } from "@/lib/admin/format";
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, ArrowRight } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, ArrowRight, Plus } from "lucide-react";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 function KpiCard({ title, value, change, currency }: { title: string; value: number; change: number; currency?: boolean }) {
   const up = change >= 0;
   return (
-    <Card>
+    <Card className="border-border/60">
       <CardContent className="p-5">
         <p className="text-sm text-muted-foreground">{title}</p>
         <p className="mt-2 text-2xl font-medium tracking-tight">
@@ -66,6 +67,11 @@ export default function AdminDashboard() {
     queryFn: () => adminGetTopProducts({ limit: 5 }),
   });
 
+  const { data: products = [] } = useQuery({
+    queryKey: ["admin", "products"],
+    queryFn: adminGetProducts,
+  });
+
   const { data: recentOrders = [] } = useQuery({
     queryKey: ["admin", "recent-orders"],
     queryFn: () => adminGetRecentOrders(5),
@@ -84,9 +90,14 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-light">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Overview of your store performance</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-light">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Overview of your store performance</p>
+        </div>
+        <Button asChild>
+          <Link href="/admin/products"><Plus className="mr-2 h-4 w-4" /> Add Product</Link>
+        </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -128,11 +139,38 @@ export default function AdminDashboard() {
             <CardTitle className="text-base font-medium">Top Products</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {topProducts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No data yet.</p>
-              ) : (
-                topProducts.map((p, i) => (
+            {topProducts.length === 0 ? (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">No sales data yet. Your most popular catalogue items:</p>
+                <div className="space-y-3">
+                  {products
+                    .filter((p: any) => p._status === "active")
+                    .sort((a: any, b: any) => (b.popularity || 0) - (a.popularity || 0))
+                    .slice(0, 5)
+                    .map((p: any) => (
+                      <div key={p.slug || p.id} className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-md border bg-muted overflow-hidden shrink-0">
+                          {p.images?.[0] ? (
+                            <img src={p.images[0]} alt={p.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs">No img</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{p.name}</p>
+                          <p className="text-xs text-muted-foreground">{p.fabricLabel} {p.colorName ? `· ${p.colorName}` : ""}</p>
+                        </div>
+                        <span className="text-sm font-medium shrink-0">{inr(p.price)}</span>
+                      </div>
+                    ))}
+                  {products.filter((p: any) => p._status === "active").length === 0 && (
+                    <p className="text-xs text-muted-foreground">No active products in catalogue.</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {topProducts.map((p, i) => (
                   <div key={p.name} className="flex items-center gap-3">
                     <span className="text-xs font-medium text-muted-foreground w-5 shrink-0">#{i + 1}</span>
                     <div className="flex-1 min-w-0">
@@ -141,9 +179,9 @@ export default function AdminDashboard() {
                     </div>
                     <span className="text-sm font-medium shrink-0">{inr(p.revenue)}</span>
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -16,7 +16,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { AdminProduct } from "@/lib/admin/types";
-import { adminGetProducts, adminCreateProduct, adminUpdateProduct, adminDeleteProduct, adminUploadImage } from "@/lib/admin/server";
+import {
+  useAdminProducts,
+  useAdminCreateProduct,
+  useAdminUpdateProduct,
+  useAdminDeleteProduct,
+  useAdminUploadImage,
+} from "@/lib/admin/hooks";
 import { inr } from "@/lib/format";
 import { Search, Plus, Pencil, Trash2, Package, ImagePlus, X } from "lucide-react";
 import type { Fabric } from "@/lib/products";
@@ -27,7 +33,7 @@ const STATUS_OPTS = ["active", "draft", "archived"] as const;
 type StatusOpt = typeof STATUS_OPTS[number];
 const ALL_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"] as const;
 
-function ImageUploader({ images, onChange }: { images: string[]; onChange: (urls: string[]) => void }) {
+function ImageUploader({ images, onChange, onUpload }: { images: string[]; onChange: (urls: string[]) => void; onUpload?: (data: { image: string; folder?: string }) => Promise<{ url: string }> }) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,8 +47,13 @@ function ImageUploader({ images, onChange }: { images: string[]; onChange: (urls
         reader.onload = () => resolve(reader.result as string);
         reader.readAsDataURL(file);
       });
-      const result = await adminUploadImage({ image: dataUrl, folder: "tuskel/products" });
-      onChange([...images, result.url]);
+      if (onUpload) {
+        const result = await onUpload({ image: dataUrl, folder: "tuskel/products" });
+        onChange([...images, result.url]);
+      } else {
+        // fallback: store as base64
+        onChange([...images, dataUrl]);
+      }
       toast.success("Image uploaded");
     } catch { toast.error("Upload failed"); }
     setUploading(false);
@@ -298,8 +309,9 @@ function ProductModal({
   );
 }
 
+import { useAdminProducts, useAdminCreateProduct, useAdminUpdateProduct, useAdminDeleteProduct, useAdminUploadImage } from "@/lib/admin/hooks";
+
 export default function ProductsPage() {
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [filterFabric, setFilterFabric] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -307,29 +319,12 @@ export default function ProductsPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["admin", "products"],
-    queryFn: adminGetProducts,
-  });
+  const { data: products = [], isLoading } = useAdminProducts();
 
-  const createMutation = useMutation({
-    mutationFn: adminCreateProduct,
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin", "products"] }); toast.success("Product created"); setIsAdding(false); },
-    onError: (e) => toast.error(`Create failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: (vars: { slug: string; data: Partial<AdminProduct> }) =>
-      adminUpdateProduct({ slug: vars.slug, data: vars.data }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin", "products"] }); toast.success("Product updated"); setEditingProduct(null); },
-    onError: (e) => toast.error(`Update failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (vars: { slug: string }) => adminDeleteProduct({ slug: vars.slug }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin", "products"] }); toast.success("Product deleted"); setDeleteConfirm(null); },
-    onError: (e) => toast.error(`Delete failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
+  const createMutation = useAdminCreateProduct();
+  const updateMutation = useAdminUpdateProduct();
+  const deleteMutation = useAdminDeleteProduct();
+  const uploadMutation = useAdminUploadImage();
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
