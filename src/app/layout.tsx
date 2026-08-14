@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import { site } from "@/lib/site";
 import { Providers } from "@/components/Providers";
-import { AnnouncementBar } from "@/components/site/AnnouncementBar";
-import { Header } from "@/components/site/Header";
-import { Footer } from "@/components/site/Footer";
-import { CartDrawer } from "@/components/site/CartDrawer";
 import { Toaster } from "@/components/ui/sonner";
-
 import "./globals.css";
+import { RootShell } from "./RootShell";
 
 export const metadata: Metadata = {
   title: "Tuskel — Premium Men's Pure Linen & Linen Blend Shirts",
@@ -48,11 +44,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Manrope:wght@300;400;500;600&display=swap"
           rel="stylesheet"
@@ -79,18 +71,7 @@ export default function RootLayout({
       </head>
       <body>
         <Providers>
-          <a
-            href="#main"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-foreground focus:px-4 focus:py-2 focus:text-primary-foreground"
-          >
-            Skip to content
-          </a>
-          <AnnouncementBar />
-          <Header />
-          <main id="main">{children}</main>
-          <Footer />
-          <CartDrawer />
-          <Toaster position="bottom-right" />
+          <RootShell>{children}</RootShell>
         </Providers>
       </body>
     </html>

@@ -21,6 +21,7 @@ import {
   ShoppingCart,
   Users,
   Inbox,
+  FolderTree,
   Settings,
   ChevronUp,
 } from "lucide-react";
@@ -36,6 +37,7 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { title: "Products", href: "/admin/products", icon: Package },
+  { title: "Categories", href: "/admin/categories", icon: FolderTree },
   { title: "Orders", href: "/admin/orders", icon: ShoppingCart },
   { title: "Customers", href: "/admin/customers", icon: Users },
   { title: "Inquiries", href: "/admin/inquiries", icon: Inbox },

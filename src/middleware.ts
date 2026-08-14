@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const ADMIN_PATHS = ["/admin", "/admin/products", "/admin/orders", "/admin/customers", "/admin/inquiries", "/admin/inventory", "/admin/settings"];
+const ADMIN_PATHS = ["/admin", "/admin/products", "/admin/categories", "/admin/orders", "/admin/customers", "/admin/inquiries", "/admin/inventory", "/admin/settings"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Allow the login page at /admin through without auth check
+  if (pathname === "/admin") {
+    return NextResponse.next();
+  }
 
   if (!ADMIN_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return NextResponse.next();

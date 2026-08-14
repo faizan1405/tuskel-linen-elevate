@@ -120,3 +120,29 @@ const inquirySchema = new Schema<IInquiry>({
 export const InquiryModel: Model<IInquiry> =
   (mongoose.models as Record<string, Model<IInquiry>>)["Inquiry"] ??
   mongoose.model<IInquiry>("Inquiry", inquirySchema);
+
+// ─── Categories ────────────────────────────────────────────────────────────────
+
+export interface ICategory extends Document {
+  name: string;
+  slug: string;
+  description: string;
+  parent: string | null;
+  image: string;
+  active: boolean;
+  productCount: number;
+}
+
+const categorySchema = new Schema<ICategory>({
+  name: { type: String, required: true, unique: true },
+  slug: { type: String, required: true, unique: true, index: true },
+  description: { type: String, default: "" },
+  parent: { type: String, default: null },
+  image: { type: String, default: "" },
+  active: { type: Boolean, default: true, index: true },
+  productCount: { type: Number, default: 0 },
+}, { collection: "categories", timestamps: true });
+
+export const CategoryModel: Model<ICategory> =
+  (mongoose.models as Record<string, Model<ICategory>>)["Category"] ??
+  mongoose.model<ICategory>("Category", categorySchema);

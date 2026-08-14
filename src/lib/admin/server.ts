@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { connectDb, ProductModel, OrderModel, CustomerModel, SiteConfigModel, InquiryModel } from "@/lib/db/models";
+import { connectDb, ProductModel, OrderModel, CustomerModel, SiteConfigModel, InquiryModel, CategoryModel } from "@/lib/db/models";
 import { uploadImage, deleteImage } from "@/lib/cloudinary";
 
 // ─── Products ────────────────────────────────────────────────────────────────
@@ -213,4 +213,65 @@ export async function adminSaveSiteConfig(data: any) {
     await connectDb();
     await SiteConfigModel.findOneAndUpdate({ key: "main" }, { $set: { value } }, { upsert: true, new: true });
     return { ok: true };
+}
+
+// ─── Categories ───────────────────────────────────────────────────────────────
+
+export async function adminGetCategories() {
+  await connectDb();
+  const categories = await CategoryModel.find().sort({ name: 1 }).lean();
+  const productCounts = await ProductModel.aggregate([
+    { $group: { _id: "$fabric", count: { $sum: 1 } } },
+  ]);
+  const countMap: Record<string, number> = {};
+  productCounts.forEach((p: any) => { countMap[p._id] = p.count; });
+  return categories.map((c: any) => ({
+    id: String(c._id),
+    name: c.name,
+    slug: c.slug,
+    description: c.description || "",
+    parent: c.parent || null,
+    image: c.image || "",
+    active: c.active ?? true,
+    productCount: c.productCount ?? 0,
+  }));
+}
+
+export async function adminCreateCategory(data: any) {
+  const parsed = z.object({
+    name: z.string().min(1),
+    slug: z.string().min(1),
+    description: z.string().default(""),
+    parent: z.string().nullable().default(null),
+    image: z.string().default(""),
+    active: z.boolean().default(true),
+  }).parse(data);
+  await connectDb();
+  const doc = await CategoryModel.create({
+    ...parsed,
+    slug: parsed.slug || parsed.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+  });
+  return doc.toObject();
+}
+
+export async function adminUpdateCategory(data: any) {
+  const { id, ...rest } = z.object({
+    id: z.string(),
+    name: z.string().optional(),
+    slug: z.string().optional(),
+    description: z.string().optional(),
+    parent: z.string().nullable().optional(),
+    image: z.string().optional(),
+    active: z.boolean().optional(),
+  }).parse(data);
+  await connectDb();
+  const doc = await CategoryModel.findByIdAndUpdate(id, { $set: rest }, { new: true }).lean();
+  return doc;
+}
+
+export async function adminDeleteCategory(data: any) {
+  const { id } = z.object({ id: z.string() }).parse(data);
+  await connectDb();
+  const result = await CategoryModel.deleteOne({ _id: id });
+  return { deleted: result.deletedCount > 0 };
 }
