@@ -15,10 +15,16 @@ import {
   ChevronUp,
   PanelLeft,
 } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -35,24 +41,28 @@ const navItems = [
 
 function SidebarNav() {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <nav className="flex flex-col gap-1 px-2">
       {navItems.map((item) => {
-        const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+        const Icon = item.icon;
+        const active =
+          pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
         return (
-          <Link
+          <button
             key={item.href}
-            href={item.href}
-            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+            type="button"
+            onClick={() => router.push(item.href)}
+            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors text-left w-full ${
               active
                 ? "bg-accent font-medium text-accent-foreground"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             }`}
           >
-            <item.icon className="h-4 w-4 shrink-0" />
+            <Icon className="h-4 w-4 shrink-0" />
             <span>{item.title}</span>
-          </Link>
+          </button>
         );
       })}
     </nav>
@@ -69,11 +79,17 @@ function AdminSidebarInner() {
     router.refresh();
   };
 
+  const handleBackToStore = () => {
+    router.push("/");
+  };
+
   return (
     <aside className="flex h-full w-64 flex-col border-r bg-sidebar">
       <div className="flex items-center gap-2 px-4 py-4 border-b">
         <span className="font-display text-xl font-medium tracking-tight">Tuskel</span>
-        <span className="text-[10px] font-sans font-medium tracking-widest uppercase text-muted-foreground ml-auto">Admin</span>
+        <span className="text-[10px] font-sans font-medium tracking-widest uppercase text-muted-foreground ml-auto">
+          Admin
+        </span>
       </div>
 
       <div className="flex-1 overflow-auto py-3">
@@ -85,7 +101,9 @@ function AdminSidebarInner() {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 rounded-lg p-2 hover:bg-accent w-full text-left">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">A</AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
+                  A
+                </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">Admin</p>
@@ -97,11 +115,17 @@ function AdminSidebarInner() {
           <DropdownMenuContent side="top" className="w-56" align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/">Back to Store</Link>
+            <DropdownMenuItem
+              onClick={handleBackToStore}
+              className="cursor-pointer"
+            >
+              Back to Store
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-red-600 cursor-pointer"
+            >
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -112,25 +136,38 @@ function AdminSidebarInner() {
 }
 
 function AdminShell({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAdminAuth();
   const [collapsed, setCollapsed] = useState(false);
+
+  if (!isAuthenticated) {
+    return <AdminLogin />;
+  }
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
       {!collapsed && <AdminSidebarInner />}
       <div className="flex flex-1 flex-col min-w-0">
         <header className="flex h-14 items-center gap-4 border-b px-4 lg:px-6 shrink-0">
-          <Button variant="ghost" size="icon" className="-ml-1 h-7 w-7" onClick={() => setCollapsed((v) => !v)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="-ml-1 h-7 w-7"
+            onClick={() => setCollapsed((v) => !v)}
+          >
             <PanelLeft className="h-4 w-4" />
           </Button>
           <Separator orientation="vertical" className="h-4" />
           <div className="flex-1" />
           <div className="text-xs text-muted-foreground">
-            {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            {new Date().toLocaleDateString("en-IN", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-4 lg:p-6">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );
@@ -173,7 +210,10 @@ function AdminLogin() {
               type="email"
               placeholder="admin@tuskel.com"
               value={email}
-              onChange={(e) => { setEmail(e.target.value); setError(""); }}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError("");
+              }}
               autoComplete="email"
               required
             />
@@ -184,7 +224,10 @@ function AdminLogin() {
               type="password"
               placeholder="••••••••"
               value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(""); }}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError("");
+              }}
               autoComplete="current-password"
               required
             />
@@ -200,15 +243,18 @@ function AdminLogin() {
 }
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 1000 * 30,
-        refetchOnWindowFocus: false,
-        retry: 1,
-      },
-    },
-  }));
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 1000 * 30,
+            refetchOnWindowFocus: false,
+            retry: 1,
+          },
+        },
+      })
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
