@@ -12,7 +12,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetch("/api/admin-auth/logout", { method: "GET", cache: "no-store" })
-      .then((r) => r.ok ? setIsAuthenticated(true) : setIsAuthenticated(false))
+      .then((r) => r.json())
+      .then((data) => setIsAuthenticated(data.authenticated === true))
       .catch(() => setIsAuthenticated(false))
       .finally(() => setChecking(false));
   }, []);
