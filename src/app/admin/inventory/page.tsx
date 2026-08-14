@@ -1,7 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,8 +66,7 @@ export default function InventoryPage() {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="font-display text-2xl font-light">Inventory</h1>
           <p className="text-sm text-muted-foreground">Track and manage product stock levels</p>
@@ -223,6 +221,5 @@ export default function InventoryPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
   );
 }

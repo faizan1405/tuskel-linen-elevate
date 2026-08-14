@@ -1,7 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -127,8 +126,7 @@ export default function OrdersPage() {
   }, [typedOrders]);
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="font-display text-2xl font-light">Orders</h1>
           <p className="text-sm text-muted-foreground">Manage and track all orders ({orders.length} total)</p>
@@ -216,6 +214,5 @@ export default function OrdersPage() {
 
         {viewOrder && <OrderDetailModal order={viewOrder} onClose={() => setViewOrder(null)} />}
       </div>
-    </AdminLayout>
   );
 }

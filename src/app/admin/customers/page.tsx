@@ -1,7 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -40,8 +39,7 @@ export default function CustomersPage() {
   const active = typedCustomers.filter((c) => c.status === "active").length;
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="font-display text-2xl font-light">Customers</h1>
           <p className="text-sm text-muted-foreground">Manage customer accounts ({typedCustomers.length} customers)</p>
@@ -183,6 +181,5 @@ export default function CustomersPage() {
           </Dialog>
         )}
       </div>
-    </AdminLayout>
   );
 }

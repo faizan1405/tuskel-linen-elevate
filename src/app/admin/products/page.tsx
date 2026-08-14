@@ -3,7 +3,6 @@ import React, { useRef } from "react";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -344,7 +343,6 @@ export default function ProductsPage() {
   };
 
   return (
-    <AdminLayout>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -451,6 +449,5 @@ export default function ProductsPage() {
         {isAdding && <ProductModal product={null} onClose={() => setIsAdding(false)} onSave={handleSave} />}
         {editingProduct && <ProductModal product={editingProduct} onClose={() => setEditingProduct(null)} onSave={handleSave} />}
       </div>
-    </AdminLayout>
   );
 }

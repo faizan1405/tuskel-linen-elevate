@@ -1,7 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -171,8 +170,7 @@ export default function CategoriesPage() {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-display text-2xl font-light">Categories</h1>
@@ -250,6 +248,5 @@ export default function CategoriesPage() {
         {isAdding && <CategoryModal category={null} onClose={() => setIsAdding(false)} onSave={handleSave} />}
         {editing && <CategoryModal category={editing} onClose={() => setEditing(null)} onSave={handleSave} />}
       </div>
-    </AdminLayout>
   );
 }

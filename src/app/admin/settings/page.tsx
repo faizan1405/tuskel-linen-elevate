@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -155,8 +154,7 @@ function ContactSection() {
 
 export default function SettingsPage() {
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="font-display text-2xl font-light">Settings</h1>
           <p className="text-sm text-muted-foreground">Manage store configuration</p>
@@ -168,6 +166,5 @@ export default function SettingsPage() {
           <ContactSection />
         </div>
       </div>
-    </AdminLayout>
   );
 }

@@ -16,9 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+import { useAdminStats } from "@/lib/admin/hooks";
 import {
-  useAdminStats,
   useAdminMonthlyRevenue,
   useAdminTopProducts,
   useAdminRecentOrders,
