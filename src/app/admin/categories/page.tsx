@@ -11,7 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { adminGetCategories, adminCreateCategory, adminUpdateCategory, adminDeleteCategory, adminUploadImage } from "@/lib/admin/server";
+import {
+  useAdminCategories,
+  useAdminCreateCategory,
+  useAdminUpdateCategory,
+  useAdminDeleteCategory,
+} from "@/lib/admin/hooks";
 import { toast } from "sonner";
 import { Search, Plus, Pencil, Trash2, FolderTree, ImagePlus, X } from "lucide-react";
 import { useRef } from "react";
@@ -52,10 +57,17 @@ function CategoryModal({
         reader.onload = () => resolve(reader.result as string);
         reader.readAsDataURL(file);
       });
-      const result = await adminUploadImage({ image: dataUrl, folder: "tuskel/categories" });
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataUrl, folder: "tuskel/categories" }),
+        cache: "no-store",
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Upload failed");
       setForm({ ...form, image: result.url });
       toast.success("Image uploaded");
-    } catch { toast.error("Upload failed"); }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Upload failed"); }
     setUploading(false);
   };
 
@@ -133,34 +145,18 @@ export default function CategoriesPage() {
   const [editing, setEditing] = useState<AdminCategory | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const { data: categories = [], isLoading } = useQuery({
-    queryKey: ["admin", "categories"],
-    queryFn: adminGetCategories,
-  });
+  const { data: categories = [], isLoading } = useAdminCategories();
 
-  const createMutation = useMutation({
-    mutationFn: adminCreateCategory,
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin", "categories"] }); toast.success("Category created"); setIsAdding(false); },
-    onError: (e) => toast.error(`Create failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
+  const typedCats = categories as AdminCategory[];
 
-  const updateMutation = useMutation({
-    mutationFn: (vars: { id: string; data: Partial<AdminCategory> }) =>
-      adminUpdateCategory({ id: vars.id, ...vars.data }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin", "categories"] }); toast.success("Category updated"); setEditing(null); },
-    onError: (e) => toast.error(`Update failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (vars: { id: string }) => adminDeleteCategory({ id: vars.id }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin", "categories"] }); toast.success("Category deleted"); setDeleteConfirm(null); },
-    onError: (e) => toast.error(`Delete failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
+  const createMutation = useAdminCreateCategory();
+  const updateMutation = useAdminUpdateCategory();
+  const deleteMutation = useAdminDeleteCategory();
 
   const filtered = useMemo(() => {
-    if (!search) return categories;
-    return categories.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.slug.includes(search));
-  }, [categories, search]);
+    if (!search) return typedCats;
+    return typedCats.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.slug.includes(search));
+  }, [typedCats, search]);
 
   const handleSave = (c: AdminCategory) => {
     if (isAdding) {
@@ -170,7 +166,7 @@ export default function CategoriesPage() {
       });
     } else {
       if (!c.id) return;
-      updateMutation.mutate({ id: c.id, data: c });
+      updateMutation.mutate({ id: c.id, data: { name: c.name, slug: c.slug, description: c.description, parent: c.parent, image: c.image, active: c.active } });
     }
   };
 
@@ -180,7 +176,7 @@ export default function CategoriesPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-display text-2xl font-light">Categories</h1>
-            <p className="text-sm text-muted-foreground">Organize your catalogue into collections ({categories.length} categories)</p>
+            <p className="text-sm text-muted-foreground">Organize your catalogue into collections ({typedCats.length} categories)</p>
           </div>
           <Button onClick={() => { setIsAdding(true); setEditing(null); }}><Plus className="mr-2 h-4 w-4" /> Add Category</Button>
         </div>
@@ -246,7 +242,7 @@ export default function CategoriesPage() {
             <p className="text-sm text-muted-foreground">This will permanently delete this category. Are you sure?</p>
             <DialogFooter>
               <Button variant="ghost" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={() => deleteConfirm && deleteMutation.mutate({ id: deleteConfirm })}>Delete</Button>
+              <Button variant="destructive" onClick={() => { if (deleteConfirm) { deleteMutation.mutate(deleteConfirm); setDeleteConfirm(null); } }}>Delete</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

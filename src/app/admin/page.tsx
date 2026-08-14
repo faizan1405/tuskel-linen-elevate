@@ -18,12 +18,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import {
-  adminGetStats,
-  adminGetMonthlyRevenue,
-  adminGetTopProducts,
-  adminGetRecentOrders,
-  adminGetProducts,
-} from "@/lib/admin/server";
+  useAdminStats,
+  useAdminMonthlyRevenue,
+  useAdminTopProducts,
+  useAdminRecentOrders,
+  useAdminProducts,
+} from "@/lib/admin/hooks";
 import { ORDER_STATUSES } from "@/lib/admin/types";
 import { formatDateShort } from "@/lib/admin/format";
 import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, ArrowRight, Plus } from "lucide-react";
@@ -49,42 +49,26 @@ function KpiCard({ title, value, change, currency }: { title: string; value: num
   );
 }
 
-
-
 export default function AdminDashboard() {
-  const { data: stats } = useQuery({
-    queryKey: ["admin", "stats"],
-    queryFn: () => adminGetStats(),
-  });
+  const { data: stats } = useAdminStats();
 
-  const { data: monthlyRevenue = {} } = useQuery({
-    queryKey: ["admin", "monthly-revenue"],
-    queryFn: () => adminGetMonthlyRevenue(),
-  });
+  const { data: revenueDataRaw = [] } = useAdminMonthlyRevenue();
 
-  const { data: topProducts = [] } = useQuery({
-    queryKey: ["admin", "top-products"],
-    queryFn: () => adminGetTopProducts({ limit: 5 }),
-  });
+  const { data: topProducts = [] } = useAdminTopProducts(5);
 
-  const { data: products = [] } = useQuery({
-    queryKey: ["admin", "products"],
-    queryFn: adminGetProducts,
-  });
+  const { data: products = [] } = useAdminProducts();
 
-  const { data: recentOrders = [] } = useQuery({
-    queryKey: ["admin", "recent-orders"],
-    queryFn: () => adminGetRecentOrders(5),
-  });
+  const { data: recentOrders = [] } = useAdminRecentOrders(5);
 
   const revenueData = useMemo(() => {
-    const now = new Date();
     return Array.from({ length: 6 }, (_, i) => {
-      const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+      const d = new Date();
+      d.setMonth(d.getMonth() - (5 - i));
       const key = `${MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
-      return { month: MONTHS[d.getMonth()], revenue: (monthlyRevenue as Record<string, number>)[key] || 0 };
+      const found = revenueDataRaw.find((r: any) => r.month === key);
+      return { month: MONTHS[d.getMonth()], revenue: found ? found.revenue : 0 };
     });
-  }, [monthlyRevenue]);
+  }, [revenueDataRaw]);
 
   const s = stats ?? { totalRevenue: 0, totalOrders: 0, totalCustomers: 0, avgOrderValue: 0, revenueChange: 0, ordersChange: 0, customersChange: 0, aovChange: 0 };
 
@@ -171,11 +155,11 @@ export default function AdminDashboard() {
             ) : (
               <div className="space-y-4">
                 {topProducts.map((p, i) => (
-                  <div key={p.name} className="flex items-center gap-3">
+                  <div key={p.slug || p.name} className="flex items-center gap-3">
                     <span className="text-xs font-medium text-muted-foreground w-5 shrink-0">#{i + 1}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.units} sold</p>
+                      <p className="text-xs text-muted-foreground">{p.units || 0} sold</p>
                     </div>
                     <span className="text-sm font-medium shrink-0">{inr(p.revenue)}</span>
                   </div>
@@ -205,10 +189,10 @@ export default function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentOrders.map((o) => {
+              {recentOrders.map((o: any) => {
                 const statusColor = ORDER_STATUSES.find((s) => s.value === o.status)?.color || "";
                 return (
-                  <TableRow key={String((o as any)._id || (o as any).id)}>
+                  <TableRow key={o.id || o._id}>
                     <TableCell className="font-mono text-xs">{o.orderNo}</TableCell>
                     <TableCell className="text-sm">{o.customer}</TableCell>
                     <TableCell className="text-sm">{formatDateShort(o.placedOn)}</TableCell>

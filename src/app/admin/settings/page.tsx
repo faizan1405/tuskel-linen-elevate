@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { adminGetSiteConfig, adminSaveSiteConfig } from "@/lib/admin/server";
+import { useAdminSiteConfig, useAdminSaveSiteConfig } from "@/lib/admin/hooks";
 import { Save, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -17,22 +17,13 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 function AnnouncementsSection() {
-  const queryClient = useQueryClient();
-  const { data: config = {} } = useQuery({
-    queryKey: ["admin", "site-config"],
-    queryFn: () => adminGetSiteConfig(),
-  });
+  const { data: config = {} } = useAdminSiteConfig();
   const [anns, setAnns] = useState<string[]>((config.announcements as string[]) ?? []);
   const [newAnn, setNewAnn] = useState("");
-  const [saved, setSaved] = useState(false);
 
-  const { mutate } = useMutation({
-    mutationFn: adminSaveSiteConfig,
-    onSuccess: () => { setSaved(true); toast.success("Announcements saved"); queryClient.invalidateQueries({ queryKey: ["admin", "site-config"] }); setTimeout(() => setSaved(false), 2000); },
-    onError: (e) => toast.error(`Save failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
+  const saveConfig = useAdminSaveSiteConfig();
 
-  const save = () => mutate({ value: { ...config, announcements: anns } });
+  const save = () => saveConfig.mutate({ ...config, announcements: anns });
 
   return (
     <Card>
@@ -48,31 +39,22 @@ function AnnouncementsSection() {
           <Input placeholder="New announcement..." value={newAnn} onChange={(e) => setNewAnn(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (() => { if (newAnn.trim()) { setAnns([...anns, newAnn.trim()]); setNewAnn(""); } })()} />
           <Button variant="outline" onClick={() => { if (newAnn.trim()) { setAnns([...anns, newAnn.trim()]); setNewAnn(""); } }}><Plus className="h-4 w-4" /></Button>
         </div>
-        <Button onClick={save}><Save className="mr-2 h-4 w-4" /> {saved ? "Saved" : "Save Announcements"}</Button>
+        <Button onClick={save}><Save className="mr-2 h-4 w-4" /> Save Announcements</Button>
       </CardContent>
     </Card>
   );
 }
 
 function CouponsSection() {
-  const queryClient = useQueryClient();
-  const { data: config = {} } = useQuery({
-    queryKey: ["admin", "site-config"],
-    queryFn: () => adminGetSiteConfig(),
-  });
+  const { data: config = {} } = useAdminSiteConfig();
   const [coupons, setCoupons] = useState<Record<string, { off: number; label: string }>>({ ...((config.coupons as Record<string, { off: number; label: string }>) ?? {}) });
   const [newCode, setNewCode] = useState("");
   const [newOff, setNewOff] = useState("10");
   const [newLabel, setNewLabel] = useState("");
-  const [saved, setSaved] = useState(false);
 
-  const { mutate } = useMutation({
-    mutationFn: adminSaveSiteConfig,
-    onSuccess: () => { setSaved(true); toast.success("Coupons saved"); queryClient.invalidateQueries({ queryKey: ["admin", "site-config"] }); setTimeout(() => setSaved(false), 2000); },
-    onError: (e) => toast.error(`Save failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
+  const saveConfig = useAdminSaveSiteConfig();
 
-  const save = () => mutate({ value: { ...config, coupons } });
+  const save = () => saveConfig.mutate({ ...config, coupons });
 
   return (
     <Card>
@@ -96,30 +78,21 @@ function CouponsSection() {
             setNewCode(""); setNewLabel("");
           }}><Plus className="h-4 w-4" /></Button>
         </div>
-        <Button onClick={save}><Save className="mr-2 h-4 w-4" /> {saved ? "Saved" : "Save Coupons"}</Button>
+        <Button onClick={save}><Save className="mr-2 h-4 w-4" /> Save Coupons</Button>
       </CardContent>
     </Card>
   );
 }
 
 function ShippingSection() {
-  const queryClient = useQueryClient();
-  const { data: config = {} } = useQuery({
-    queryKey: ["admin", "site-config"],
-    queryFn: () => adminGetSiteConfig(),
-  });
+  const { data: config = {} } = useAdminSiteConfig();
   const [freeThreshold, setFreeThreshold] = useState(String(config.freeShippingThreshold ?? 0));
   const [flatRate, setFlatRate] = useState(String(config.shippingFlat ?? 0));
   const [returnsWindow, setReturnsWindow] = useState(String(config.returnsWindowDays ?? 7));
-  const [saved, setSaved] = useState(false);
 
-  const { mutate } = useMutation({
-    mutationFn: adminSaveSiteConfig,
-    onSuccess: () => { setSaved(true); toast.success("Settings saved"); queryClient.invalidateQueries({ queryKey: ["admin", "site-config"] }); setTimeout(() => setSaved(false), 2000); },
-    onError: (e) => toast.error(`Save failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
+  const saveConfig = useAdminSaveSiteConfig();
 
-  const save = () => mutate({ value: { ...config, freeShippingThreshold: Number(freeThreshold), shippingFlat: Number(flatRate), returnsWindowDays: Number(returnsWindow) } });
+  const save = () => saveConfig.mutate({ ...config, freeShippingThreshold: Number(freeThreshold), shippingFlat: Number(flatRate), returnsWindowDays: Number(returnsWindow) });
 
   return (
     <Card>
@@ -140,30 +113,21 @@ function ShippingSection() {
             <Input type="number" value={returnsWindow} onChange={(e) => setReturnsWindow(e.target.value)} />
           </div>
         </div>
-        <Button onClick={save}><Save className="mr-2 h-4 w-4" /> {saved ? "Saved" : "Save Settings"}</Button>
+        <Button onClick={save}><Save className="mr-2 h-4 w-4" /> Save Settings</Button>
       </CardContent>
     </Card>
   );
 }
 
 function ContactSection() {
-  const queryClient = useQueryClient();
-  const { data: config = {} } = useQuery({
-    queryKey: ["admin", "site-config"],
-    queryFn: () => adminGetSiteConfig(),
-  });
+  const { data: config = {} } = useAdminSiteConfig();
   const [phone, setPhone] = useState(String(config.phone ?? ""));
   const [whatsapp, setWhatsapp] = useState(String(config.whatsapp ?? ""));
   const [email, setEmail] = useState(String(config.email ?? ""));
-  const [saved, setSaved] = useState(false);
 
-  const { mutate } = useMutation({
-    mutationFn: adminSaveSiteConfig,
-    onSuccess: () => { setSaved(true); toast.success("Contact info saved"); queryClient.invalidateQueries({ queryKey: ["admin", "site-config"] }); setTimeout(() => setSaved(false), 2000); },
-    onError: (e) => toast.error(`Save failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
+  const saveConfig = useAdminSaveSiteConfig();
 
-  const save = () => mutate({ value: { ...config, phone, whatsapp, email } });
+  const save = () => saveConfig.mutate({ ...config, phone, whatsapp, email });
 
   return (
     <Card>
@@ -183,13 +147,11 @@ function ContactSection() {
             <Input value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
         </div>
-        <Button onClick={save}><Save className="mr-2 h-4 w-4" /> {saved ? "Saved" : "Save Contact Info"}</Button>
+        <Button onClick={save}><Save className="mr-2 h-4 w-4" /> Save Contact Info</Button>
       </CardContent>
     </Card>
   );
 }
-
-
 
 export default function SettingsPage() {
   return (

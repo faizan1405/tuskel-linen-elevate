@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Eye } from "lucide-react";
 import { ORDER_STATUSES, ORDER_STATUS_FLOW, type AdminOrder, type OrderStatus } from "@/lib/admin/types";
-import { adminGetOrders, adminUpdateOrderStatus } from "@/lib/admin/server";
+import { useAdminOrders, useAdminUpdateOrder } from "@/lib/admin/hooks";
 import { inr } from "@/lib/format";
 import { formatDateShort } from "@/lib/admin/format";
 import { toast } from "sonner";
@@ -30,17 +30,19 @@ function OrderDetailModal({ order, onClose }: { order: AdminOrder; onClose: () =
     if (idx !== -1 && idx < ORDER_STATUS_FLOW.length - 1) setStatus(ORDER_STATUS_FLOW[idx + 1] as OrderStatus);
   };
 
-  const { mutate } = useMutation({
-    mutationFn: adminUpdateOrderStatus,
-    onSuccess: () => {
-      setSaved(true);
-      setTimeout(() => { setSaved(false); onClose(); }, 600);
-    },
-    onError: (e) => toast.error(`Update failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
+  const { mutate, isPending } = useAdminUpdateOrder();
 
   const handleSave = () => {
-    mutate({ id: order.id, status, notes });
+    mutate({
+      id: order.id,
+      data: { status, notes },
+    }, {
+      onSuccess: () => {
+        setSaved(true);
+        setTimeout(() => { setSaved(false); onClose(); }, 600);
+      },
+      onError: (e: Error) => toast.error(e.message),
+    });
   };
 
   return (
@@ -102,42 +104,27 @@ function OrderDetailModal({ order, onClose }: { order: AdminOrder; onClose: () =
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave}>{saved ? "Saved!" : "Save Changes"}</Button>
+          <Button onClick={handleSave} disabled={isPending}>{saved ? "Saved!" : isPending ? "Saving..." : "Save Changes"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-
-
 export default function OrdersPage() {
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(STATUS_ALL);
   const [viewOrder, setViewOrder] = useState<AdminOrder | null>(null);
 
-  const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["admin", "orders"],
-    queryFn: () => adminGetOrders(),
-  });
+  const { data: orders = [], isLoading } = useAdminOrders();
 
-  const filtered = useMemo(() => {
-    return orders.filter((o) => {
-      if (search) {
-        const q = search.toLowerCase();
-        return o.orderNo.toLowerCase().includes(q) || o.customer.toLowerCase().includes(q) || o.email.toLowerCase().includes(q);
-      }
-      if (statusFilter !== STATUS_ALL && o.status !== statusFilter) return false;
-      return true;
-    });
-  }, [orders, search, statusFilter]);
+  const typedOrders = orders as AdminOrder[];
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
-    orders.forEach((o) => { c[o.status] = (c[o.status] || 0) + 1; });
+    typedOrders.forEach((o) => { c[o.status] = (c[o.status] || 0) + 1; });
     return c;
-  }, [orders]);
+  }, [typedOrders]);
 
   return (
     <AdminLayout>
@@ -186,10 +173,17 @@ export default function OrdersPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>
-                ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No orders match.</TableCell></TableRow>
-                ) : (
-                  filtered.map((o) => (
+                ) : (() => {
+                  const visible = typedOrders.filter((o: AdminOrder) => {
+                    const q = search.toLowerCase();
+                    if (q) return o.orderNo.toLowerCase().includes(q) || o.customer.toLowerCase().includes(q) || o.email.toLowerCase().includes(q);
+                    if (statusFilter !== STATUS_ALL && o.status !== statusFilter) return false;
+                    return true;
+                  });
+                  if (visible.length === 0) {
+                    return <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No orders match.</TableCell></TableRow>;
+                  }
+                  return visible.map((o: AdminOrder) => (
                     <TableRow key={o.id}>
                       <TableCell>
                         <div>
@@ -213,8 +207,8 @@ export default function OrdersPage() {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
+                  ));
+                })()}
               </TableBody>
             </Table>
           </CardContent>

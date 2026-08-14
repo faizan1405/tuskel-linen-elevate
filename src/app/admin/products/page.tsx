@@ -51,7 +51,6 @@ function ImageUploader({ images, onChange, onUpload }: { images: string[]; onCha
         const result = await onUpload({ image: dataUrl, folder: "tuskel/products" });
         onChange([...images, result.url]);
       } else {
-        // fallback: store as base64
         onChange([...images, dataUrl]);
       }
       toast.success("Image uploaded");
@@ -176,7 +175,6 @@ function ProductModal({
           <DialogTitle>{editing ? "Edit Product" : "Add Product"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-5 py-4">
-          {/* Basic Info */}
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Product Name *</Label>
@@ -205,7 +203,6 @@ function ProductModal({
             </div>
           </div>
 
-          {/* Pricing & Stock */}
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>MRP (₹) *</Label>
@@ -221,7 +218,6 @@ function ProductModal({
             </div>
           </div>
 
-          {/* Color */}
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Color Name</Label>
@@ -237,10 +233,8 @@ function ProductModal({
             </div>
           </div>
 
-          {/* Images */}
           <ImageUploader images={form.images || []} onChange={(imgs) => update("images", imgs)} />
 
-          {/* Sizes */}
           <div className="space-y-2">
             <Label>Sizes Available</Label>
             <div className="flex flex-wrap gap-3">
@@ -256,17 +250,14 @@ function ProductModal({
             </div>
           </div>
 
-          {/* Summary */}
           <div className="space-y-2">
             <Label>Summary</Label>
             <Textarea value={form.summary ?? ""} onChange={(e) => update("summary", e.target.value)} rows={3} placeholder="Short product description…" />
           </div>
 
-          {/* Dynamic lists */}
           <DynamicList label="Key Details" items={form.details || []} onChange={(details) => update("details", details)} placeholder="e.g. Breathable pure linen fabric" />
           <DynamicList label="Care Instructions" items={form.care || []} onChange={(care) => update("care", care)} placeholder="e.g. Machine wash cold" />
 
-          {/* Fit, Model Note, Popularity, Date */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Fit</Label>
@@ -288,7 +279,6 @@ function ProductModal({
             <Input type="date" value={form.addedOn ?? ""} onChange={(e) => update("addedOn", e.target.value)} />
           </div>
 
-          {/* Toggles */}
           <div className="flex gap-6">
             <div className="flex items-center gap-2">
               <Switch id="newArrival" checked={form.newArrival ?? false} onCheckedChange={(c) => update("newArrival", c)} />
@@ -309,8 +299,6 @@ function ProductModal({
   );
 }
 
-import { useAdminProducts, useAdminCreateProduct, useAdminUpdateProduct, useAdminDeleteProduct, useAdminUploadImage } from "@/lib/admin/hooks";
-
 export default function ProductsPage() {
   const [search, setSearch] = useState("");
   const [filterFabric, setFilterFabric] = useState<string>("all");
@@ -319,7 +307,9 @@ export default function ProductsPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const { data: products = [], isLoading } = useAdminProducts();
+  const queryClient = useQueryClient();
+
+  const { data: products = [], isLoading } = useAdminProducts() as { data: any[]; isLoading: boolean };
 
   const createMutation = useAdminCreateProduct();
   const updateMutation = useAdminUpdateProduct();
@@ -348,7 +338,8 @@ export default function ProductsPage() {
       });
     } else {
       if (!p.slug) return;
-      updateMutation.mutate({ slug: p.slug, data: p });
+      const { id, ...rest } = p;
+      updateMutation.mutate({ slug: p.slug, data: rest });
     }
   };
 
@@ -446,14 +437,13 @@ export default function ProductsPage() {
           </CardContent>
         </Card>
 
-        {/* Delete Confirmation */}
         <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
           <DialogContent>
             <DialogHeader><DialogTitle>Delete Product</DialogTitle></DialogHeader>
             <p className="text-sm text-muted-foreground">This will permanently delete the product and its Cloudinary images. Are you sure?</p>
             <DialogFooter>
               <Button variant="ghost" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={() => deleteConfirm && deleteMutation.mutate({ slug: deleteConfirm })}>Delete</Button>
+              <Button variant="destructive" onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)}>Delete</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

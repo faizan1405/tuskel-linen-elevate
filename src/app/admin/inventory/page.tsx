@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { AdminProduct } from "@/lib/admin/types";
-import { adminGetProducts, adminUpdateProduct } from "@/lib/admin/server";
+import { useAdminProducts, useAdminUpdateProduct } from "@/lib/admin/hooks";
 import { Search, Package, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,24 +23,13 @@ export default function InventoryPage() {
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
   const [newStock, setNewStock] = useState(0);
 
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["admin", "products"],
-    queryFn: () => adminGetProducts(),
-  });
+  const { data: products = [], isLoading } = useAdminProducts();
+  const typedProducts = products as AdminProduct[];
 
-  const { mutate: updateStock, isPending: updating } = useMutation({
-    mutationFn: ({ slug, stock }: { slug: string; stock: number }) =>
-      adminUpdateProduct({ slug, _stock: stock }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
-      toast.success("Stock updated");
-      setEditingProduct(null);
-    },
-    onError: (e) => toast.error(`Update failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
+  const updateMutation = useAdminUpdateProduct();
 
-  const filtered = useMemo(() => {
-    return products.filter((p) => {
+  const filtered: AdminProduct[] = useMemo(() => {
+    return typedProducts.filter((p: AdminProduct) => {
       const q = search.toLowerCase();
       if (q) return p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q);
       if (filterStock === "low" && (p._stock ?? 0) >= STOCK_THRESHOLD) return false;
@@ -48,15 +37,15 @@ export default function InventoryPage() {
       if (filterStock === "in" && (p._stock ?? 0) <= 0) return false;
       return true;
     });
-  }, [products, search, filterStock]);
+  }, [typedProducts, search, filterStock]);
 
   const stats = useMemo(() => {
-    const total = products.length;
-    const low = products.filter((p) => (p._stock ?? 0) > 0 && (p._stock ?? 0) < STOCK_THRESHOLD).length;
-    const out = products.filter((p) => (p._stock ?? 0) <= 0).length;
-    const totalStock = products.reduce((s, p) => s + (p._stock ?? 0), 0);
+    const total = typedProducts.length;
+    const low = typedProducts.filter((p) => (p._stock ?? 0) > 0 && (p._stock ?? 0) < STOCK_THRESHOLD).length;
+    const out = typedProducts.filter((p) => (p._stock ?? 0) <= 0).length;
+    const totalStock = typedProducts.reduce((s, p) => s + (p._stock ?? 0), 0);
     return { total, low, out, totalStock };
-  }, [products]);
+  }, [typedProducts]);
 
   const openEdit = (p: AdminProduct) => {
     setEditingProduct(p);
@@ -65,7 +54,16 @@ export default function InventoryPage() {
 
   const handleSave = () => {
     if (!editingProduct) return;
-    updateStock({ slug: editingProduct.slug, stock: newStock });
+    updateMutation.mutate({
+      slug: editingProduct.slug,
+      data: { _stock: newStock },
+    }, {
+      onSuccess: () => {
+        toast.success("Stock updated");
+        setEditingProduct(null);
+      },
+      onError: (e: Error) => toast.error(e.message),
+    });
   };
 
   return (
@@ -219,8 +217,8 @@ export default function InventoryPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setEditingProduct(null)} disabled={updating}>Cancel</Button>
-              <Button onClick={handleSave} disabled={updating}>{updating ? "Saving..." : "Save"}</Button>
+              <Button variant="ghost" onClick={() => setEditingProduct(null)}>Cancel</Button>
+              <Button onClick={handleSave}>Save</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

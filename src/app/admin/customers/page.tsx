@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,29 +10,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AdminCustomer } from "@/lib/admin/types";
-import { adminGetCustomers, adminGetOrders } from "@/lib/admin/server";
+import { useAdminCustomers, useAdminOrders } from "@/lib/admin/hooks";
 import { formatINR, formatDate } from "@/lib/admin/format";
 import { Search, Eye, User } from "lucide-react";
-
-
 
 export default function CustomersPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [viewCustomer, setViewCustomer] = useState<AdminCustomer | null>(null);
 
-  const { data: customers = [], isLoading } = useQuery({
-    queryKey: ["admin", "customers"],
-    queryFn: () => adminGetCustomers(),
-  });
+  const { data: customers = [], isLoading } = useAdminCustomers();
 
-  const { data: orders = [] } = useQuery({
-    queryKey: ["admin", "orders"],
-    queryFn: () => adminGetOrders(),
-  });
+  const { data: orders = [] } = useAdminOrders();
+
+  const typedCustomers = customers as AdminCustomer[];
+  const typedOrders = orders as AdminCustomer[];
 
   const filtered = useMemo(() => {
-    return customers.filter((c) => {
+    return typedCustomers.filter((c) => {
       if (search) {
         const q = search.toLowerCase();
         return c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
@@ -40,23 +35,23 @@ export default function CustomersPage() {
       if (filterStatus !== "all" && c.status !== filterStatus) return false;
       return true;
     });
-  }, [customers, search, filterStatus]);
+  }, [typedCustomers, search, filterStatus]);
 
-  const active = customers.filter((c) => c.status === "active").length;
+  const active = typedCustomers.filter((c) => c.status === "active").length;
 
   return (
     <AdminLayout>
       <div className="space-y-6">
         <div>
           <h1 className="font-display text-2xl font-light">Customers</h1>
-          <p className="text-sm text-muted-foreground">Manage customer accounts ({customers.length} customers)</p>
+          <p className="text-sm text-muted-foreground">Manage customer accounts ({typedCustomers.length} customers)</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <Card>
             <CardContent className="p-5">
               <p className="text-sm text-muted-foreground">Total Customers</p>
-              <p className="mt-2 text-2xl font-medium">{customers.length}</p>
+              <p className="mt-2 text-2xl font-medium">{typedCustomers.length}</p>
             </CardContent>
           </Card>
           <Card>
@@ -68,7 +63,7 @@ export default function CustomersPage() {
           <Card>
             <CardContent className="p-5">
               <p className="text-sm text-muted-foreground">Total Customer Spend</p>
-              <p className="mt-2 text-2xl font-medium">{formatINR(customers.reduce((s, c) => s + c.spent, 0))}</p>
+              <p className="mt-2 text-2xl font-medium">{formatINR(typedCustomers.reduce((s, c) => s + c.spent, 0))}</p>
             </CardContent>
           </Card>
         </div>
@@ -115,7 +110,7 @@ export default function CustomersPage() {
                   <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No customers match.</TableCell></TableRow>
                 ) : (
                   filtered.map((c) => (
-                    <TableRow key={String((c as any)._id || (c as any).id)}>
+                    <TableRow key={String((c as any)._id || c.id)}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
@@ -137,7 +132,7 @@ export default function CustomersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => setViewCustomer(c as any)}>
+                        <Button variant="ghost" size="icon" onClick={() => setViewCustomer(c)}>
                           <Eye className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -166,11 +161,11 @@ export default function CustomersPage() {
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">Order History</p>
                   <div className="space-y-2">
-                    {orders
+                    {(orders as any[])
                       .filter((o) => o.customer === viewCustomer.name)
                       .slice(0, 5)
                       .map((o) => (
-                        <div key={String((o as any)._id || (o as any).id)} className="flex items-center justify-between rounded-md border px-3 py-2">
+                        <div key={String(o.id)} className="flex items-center justify-between rounded-md border px-3 py-2">
                           <div>
                             <p className="text-sm font-mono">{o.orderNo}</p>
                             <p className="text-xs text-muted-foreground">{formatDate(o.placedOn)}</p>
@@ -178,7 +173,7 @@ export default function CustomersPage() {
                           <span className="text-sm font-medium">{formatINR(o.total)}</span>
                         </div>
                       ))}
-                    {orders.filter((o) => o.customer === viewCustomer.name).length === 0 && (
+                    {(orders as any[]).filter((o) => o.customer === viewCustomer.name).length === 0 && (
                       <p className="text-sm text-muted-foreground">No orders found.</p>
                     )}
                   </div>

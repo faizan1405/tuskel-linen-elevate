@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { connectDb, OrderModel } from "@/lib/db/models";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const body = await req.json();
+    const { id } = await params;
     await connectDb();
-    const doc = await OrderModel.findByIdAndUpdate(params.id, {
+    const doc = await OrderModel.findByIdAndUpdate(id, {
       ...body,
       updatedOn: new Date().toISOString().split("T")[0],
     }, { new: true }).lean();

@@ -12,7 +12,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { INQUIRY_STATUSES, type AdminInquiry } from "@/lib/admin/types";
-import { adminGetInquiries, adminUpdateInquiryStatus, adminDeleteInquiry } from "@/lib/admin/server";
+import {
+  useAdminInquiries,
+  useAdminUpdateInquiry,
+  useAdminDeleteInquiry,
+} from "@/lib/admin/hooks";
 import { formatDate, formatDateShort } from "@/lib/admin/format";
 import { Search, Trash2, MailOpen, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -21,26 +25,23 @@ const STATUS_ALL = "all" as const;
 
 function InquiryDetailModal({ inquiry, onClose }: { inquiry: AdminInquiry; onClose: () => void }) {
   const [status, setStatus] = useState<AdminInquiry["status"]>(inquiry.status);
-  const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
 
-  const { mutate: updateStatus } = useMutation({
-    mutationFn: adminUpdateInquiryStatus,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "inquiries"] });
-      setSaving(false);
-      onClose();
-    },
-    onError: (e) => {
-      toast.error(`Update failed: ${e instanceof Error ? e.message : "unknown"}`);
-      setSaving(false);
-    },
-  });
+  const { mutate: updateStatus } = useAdminUpdateInquiry();
 
   const handleStatusChange = (newStatus: AdminInquiry["status"]) => {
     setStatus(newStatus);
     setSaving(true);
-    updateStatus({ id: inquiry.id, status: newStatus });
+    updateStatus({ id: inquiry.id, data: { status: newStatus } }, {
+      onSuccess: () => {
+        setSaving(false);
+        onClose();
+      },
+      onError: (e: Error) => {
+        toast.error(e.message);
+        setSaving(false);
+      },
+    });
   };
 
   return (
@@ -92,19 +93,19 @@ function InquiryDetailModal({ inquiry, onClose }: { inquiry: AdminInquiry; onClo
 }
 
 export default function InquiriesPage() {
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(STATUS_ALL);
   const [viewInquiry, setViewInquiry] = useState<AdminInquiry | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data: inquiries = [], isLoading } = useQuery({
-    queryKey: ["admin", "inquiries"],
-    queryFn: () => adminGetInquiries(),
-  });
+  const { data: inquiries = [], isLoading } = useAdminInquiries();
+
+  const typedInquiries = inquiries as AdminInquiry[];
+
+  const deleteMutation = useAdminDeleteInquiry();
 
   const filtered = useMemo(() => {
-    return inquiries.filter((inq) => {
+    return typedInquiries.filter((inq) => {
       const q = search.toLowerCase().trim();
       if (q) {
         return (
@@ -117,36 +118,25 @@ export default function InquiriesPage() {
       if (statusFilter !== STATUS_ALL && inq.status !== statusFilter) return false;
       return true;
     });
-  }, [inquiries, search, statusFilter]);
+  }, [typedInquiries, search, statusFilter]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
-    inquiries.forEach((inq) => { c[inq.status] = (c[inq.status] || 0) + 1; });
+    typedInquiries.forEach((inq) => { c[inq.status] = (c[inq.status] || 0) + 1; });
     return c;
-  }, [inquiries]);
-
-  const { mutate: deleteInquiry, isPending: deleting } = useMutation({
-    mutationFn: adminDeleteInquiry,
-    onSuccess: (_, id) => {
-      toast.success("Inquiry deleted.");
-      queryClient.invalidateQueries({ queryKey: ["admin", "inquiries"] });
-      if (deleteId === id) setDeleteId(null);
-      if (viewInquiry?.id === id) setViewInquiry(null);
-    },
-    onError: (e) => toast.error(`Delete failed: ${e instanceof Error ? e.message : "unknown"}`),
-  });
+  }, [typedInquiries]);
 
   return (
     <AdminLayout>
       <div className="space-y-6">
         <div>
           <h1 className="font-display text-2xl font-light">Inquiries</h1>
-          <p className="text-sm text-muted-foreground">Customer contact messages ({inquiries.length} total)</p>
+          <p className="text-sm text-muted-foreground">Customer contact messages ({typedInquiries.length} total)</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
           <Button variant={statusFilter === STATUS_ALL ? "default" : "outline"} size="sm" onClick={() => setStatusFilter(STATUS_ALL)}>
-            All <span className="ml-1 text-xs opacity-70">{inquiries.length}</span>
+            All <span className="ml-1 text-xs opacity-70">{typedInquiries.length}</span>
           </Button>
           {INQUIRY_STATUSES.map((s) => (
             <Button
@@ -212,7 +202,6 @@ export default function InquiriesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            disabled={deleting}
                             onClick={() => setDeleteId(inq.id)}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -236,13 +225,12 @@ export default function InquiriesPage() {
               <DialogDescription>This action is permanent and cannot be undone.</DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setDeleteId(null)} disabled={deleting}>Cancel</Button>
+              <Button variant="ghost" onClick={() => setDeleteId(null)}>Cancel</Button>
               <Button
                 variant="destructive"
-                disabled={deleting}
-                onClick={() => deleteId && deleteInquiry(deleteId)}
+                onClick={() => deleteId && deleteMutation.mutate(deleteId)}
               >
-                {deleting ? "Deleting..." : "Delete"}
+                Delete
               </Button>
             </DialogFooter>
           </DialogContent>

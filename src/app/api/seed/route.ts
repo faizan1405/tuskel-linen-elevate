@@ -35,7 +35,7 @@ const seedProducts = [
     bestSeller: false,
     popularity: 100,
     _status: "active",
-    stock: 100
+    _stock: 100
   },
   {
     name: "Linen Saree - Sage Green",
@@ -66,7 +66,7 @@ const seedProducts = [
     bestSeller: false,
     popularity: 90,
     _status: "active",
-    stock: 100
+    _stock: 100
   },
   {
     name: "Linen Blend Saree - Blush Pink",
@@ -97,7 +97,7 @@ const seedProducts = [
     bestSeller: true,
     popularity: 95,
     _status: "active",
-    stock: 100
+    _stock: 100
   },
   {
     name: "Linen Saree - Navy Blue",
@@ -128,7 +128,7 @@ const seedProducts = [
     bestSeller: true,
     popularity: 85,
     _status: "active",
-    stock: 100
+    _stock: 100
   },
   {
     name: "Linen Blend Saree - Mustard Yellow",
@@ -159,7 +159,7 @@ const seedProducts = [
     bestSeller: false,
     popularity: 75,
     _status: "active",
-    stock: 100
+    _stock: 100
   },
   {
     name: "Linen Saree - Terracotta",
@@ -190,7 +190,7 @@ const seedProducts = [
     bestSeller: false,
     popularity: 80,
     _status: "active",
-    stock: 100
+    _stock: 100
   }
 ];
 

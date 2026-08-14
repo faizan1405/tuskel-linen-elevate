@@ -7,10 +7,10 @@ export async function PATCH(_req: Request, { params }: { params: Promise<{ slug:
   try {
     const body = await _req.json();
     const { slug } = await params;
-    // Strip internal fields that shouldn't be written to MongoDB
+    // Strip internal fields; keep _stock/_status as they are real MongoDB fields
     const clean: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(body)) {
-      if (!INTERNAL_FIELDS.has(k) && !k.startsWith("_")) clean[k] = v;
+      if (!INTERNAL_FIELDS.has(k)) clean[k] = v;
     }
     await connectDb();
     const doc = await ProductModel.findOneAndUpdate({ slug }, { $set: clean }, { new: true }).lean();
