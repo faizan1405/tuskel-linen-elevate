@@ -1,21 +1,9 @@
 "use client";
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AdminAuthProvider, useAdminAuth, type AdminAuthValue } from "@/lib/admin/auth";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarTrigger,
-  SidebarProvider,
-} from "@/components/ui/sidebar";
+import { AdminAuthProvider, useAdminAuth } from "@/lib/admin/auth";
 import {
   LayoutDashboard,
   Package,
@@ -25,6 +13,7 @@ import {
   FolderTree,
   Settings,
   ChevronUp,
+  PanelLeft,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -32,8 +21,6 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-import { usePathname } from "next/navigation";
 
 const navItems = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -46,39 +33,54 @@ const navItems = [
   { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
-function AdminSidebarInner() {
-  const { logout } = useAdminAuth();
+function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <Sidebar collapsible="none" className="border-r">
-      <SidebarHeader className="border-b px-4 py-4">
-        <div className="flex items-center gap-2">
-          <span className="font-display text-xl font-medium tracking-tight">Tuskel</span>
-          <span className="text-[10px] font-sans font-medium tracking-widest uppercase text-muted-foreground ml-auto">Admin</span>
-        </div>
-      </SidebarHeader>
+    <nav className="flex flex-col gap-1 px-2">
+      {navItems.map((item) => {
+        const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+              active
+                ? "bg-accent font-medium text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            }`}
+          >
+            <item.icon className="h-4 w-4 shrink-0" />
+            <span>{item.title}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href))}>
-                    <Link href={item.href}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+function AdminSidebarInner() {
+  const { logout } = useAdminAuth();
+  const router = useRouter();
 
-      <SidebarFooter className="border-t p-2">
+  const handleLogout = async () => {
+    await logout();
+    router.push("/");
+    router.refresh();
+  };
+
+  return (
+    <aside className="flex h-full w-64 flex-col border-r bg-sidebar">
+      <div className="flex items-center gap-2 px-4 py-4 border-b">
+        <span className="font-display text-xl font-medium tracking-tight">Tuskel</span>
+        <span className="text-[10px] font-sans font-medium tracking-widest uppercase text-muted-foreground ml-auto">Admin</span>
+      </div>
+
+      <div className="flex-1 overflow-auto py-3">
+        <SidebarNav />
+      </div>
+
+      <div className="border-t p-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 rounded-lg p-2 hover:bg-accent w-full text-left">
@@ -96,30 +98,30 @@ function AdminSidebarInner() {
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/">← Back to Store</Link>
+              <Link href="/">Back to Store</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="text-red-600">Log out</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+              Log out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </SidebarFooter>
-    </Sidebar>
+      </div>
+    </aside>
   );
 }
 
 function AdminShell({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAdminAuth();
-
-  if (!isAuthenticated) {
-    return <AdminLogin />;
-  }
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex min-h-svh w-full">
-      <AdminSidebarInner />
-      <div className="flex flex-1 flex-col">
-        <header className="flex h-14 items-center gap-4 border-b px-4 lg:px-6">
-          <SidebarTrigger className="-ml-1" />
+    <div className="flex h-screen w-full overflow-hidden">
+      {!collapsed && <AdminSidebarInner />}
+      <div className="flex flex-1 flex-col min-w-0">
+        <header className="flex h-14 items-center gap-4 border-b px-4 lg:px-6 shrink-0">
+          <Button variant="ghost" size="icon" className="-ml-1 h-7 w-7" onClick={() => setCollapsed((v) => !v)}>
+            <PanelLeft className="h-4 w-4" />
+          </Button>
           <Separator orientation="vertical" className="h-4" />
           <div className="flex-1" />
           <div className="text-xs text-muted-foreground">
@@ -136,6 +138,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
 function AdminLogin() {
   const { login } = useAdminAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -149,6 +152,9 @@ function AdminLogin() {
     if (!result.ok) {
       setError(result.error || "Invalid credentials.");
       setPassword("");
+    } else {
+      router.push("/admin");
+      router.refresh();
     }
     setLoading(false);
   };
@@ -206,11 +212,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SidebarProvider defaultOpen>
-        <AdminAuthProvider>
-          <AdminShell>{children}</AdminShell>
-        </AdminAuthProvider>
-      </SidebarProvider>
+      <AdminAuthProvider>
+        <AdminShell>{children}</AdminShell>
+      </AdminAuthProvider>
     </QueryClientProvider>
   );
 }
