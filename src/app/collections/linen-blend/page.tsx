@@ -23,7 +23,7 @@ export default function Page() {
           </div>
         </Reveal>
       </div>
-      <ShopView scope="linen-blend" showFabricFilter={false} />
+      <ShopView scope="linen-blend" showFabricFilter={false} useApi={true} />
     </div>
   );
 }

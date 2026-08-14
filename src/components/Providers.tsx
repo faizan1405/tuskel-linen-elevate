@@ -2,6 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StoreProvider } from "@/lib/store";
 import { AuthProvider } from "@/lib/auth";
+import { SiteConfigProvider } from "@/lib/site-config";
 import { useState, type ReactNode } from "react";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -11,7 +12,9 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <StoreProvider>
-          {children}
+          <SiteConfigProvider>
+            {children}
+          </SiteConfigProvider>
         </StoreProvider>
       </AuthProvider>
     </QueryClientProvider>

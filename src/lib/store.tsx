@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { products, type Product } from "./products";
 import type { Size } from "./site";
+import { useSiteConfig } from "./site-config";
 
 export interface CartLine {
   slug: string;

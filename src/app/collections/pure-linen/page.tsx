@@ -23,7 +23,7 @@ export default function Page() {
           </div>
         </Reveal>
       </div>
-      <ShopView scope="pure-linen" showFabricFilter={false} />
+      <ShopView scope="pure-linen" showFabricFilter={false} useApi={true} />
     </div>
   );
 }

@@ -349,11 +349,6 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
               </Link>
             </li>
           ))}
-          <li>
-            <Link href="/journal" onClick={onNavigate} className="block py-3.5 text-[14px]">
-              Journal
-            </Link>
-          </li>
         </ul>
       </nav>
       <div className="border-t border-border px-5 py-4">

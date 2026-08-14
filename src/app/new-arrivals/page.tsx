@@ -24,7 +24,7 @@ export default function Page() {
       <div className="shell">
         <Breadcrumbs items={[{ label: "New Arrivals" }]} />
         <div className="pt-6">
-          <ShopView scope="new" />
+          <ShopView scope="new" useApi={true} />
         </div>
       </div>
     </div>

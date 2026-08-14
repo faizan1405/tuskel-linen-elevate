@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import React, { Suspense } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { PageHeader } from "@/components/site/PageHeader";
@@ -21,8 +21,10 @@ function ShopContent() {
         intro="Pure linen and linen blend, cut to the same regular fit and available from S to 3XL."
       />
       <ShopView
-        {...(colour ? { initialColour: colour } : {})}
-        {...(sort ? { initialSort: sort } : {})}
+        scope="all"
+        initialColour={colour || undefined}
+        initialSort={sort || "newest"}
+        useApi={true}
       />
     </div>
   );

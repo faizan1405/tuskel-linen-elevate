@@ -1,9 +1,9 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
-import { colours, products as allProducts, type Fabric, type Product } from "@/lib/products";
+import { colours, byFabric, newArrivals, bestSellers, type Fabric, type Product } from "@/lib/products";
 import { SIZES } from "@/lib/site";
-import { ProductGrid } from "./ProductGrid";
+import { ProductGrid, ProductGridSkeleton } from "./ProductGrid";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,8 @@ export interface ShopViewProps {
   initialColour?: string;
   initialSort?: SortKey;
   showFabricFilter?: boolean;
+  /** If true, fetch products from the API (merges static + DB). If false, use static only. */
+  useApi?: boolean;
 }
 
 export function ShopView({
@@ -28,12 +30,45 @@ export function ShopView({
   initialColour,
   initialSort = "newest",
   showFabricFilter = true,
+  useApi = false,
 }: ShopViewProps) {
-  const base = useMemo<Product[]>(() => {
-    if (scope === "new") return allProducts.filter((p) => p.newArrival);
-    if (scope === "all") return allProducts;
-    return allProducts.filter((p) => p.fabric === scope);
+  const [apiProducts, setApiProducts] = useState<Product[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const DEFAULT_MAX = 4000;
+
+  const staticBase = useMemo<Product[]>(() => {
+    if (scope === "new") return newArrivals();
+    if (scope === "all") return [...byFabric("pure-linen"), ...byFabric("linen-blend")];
+    return byFabric(scope);
   }, [scope]);
+
+  const base = useMemo<Product[]>(() => {
+    if (useApi && apiProducts.length > 0) {
+      if (scope === "new") return apiProducts.filter((p) => p.newArrival);
+      if (scope === "all") return apiProducts;
+      return apiProducts.filter((p) => p.fabric === scope);
+    }
+    return staticBase;
+  }, [useApi, apiProducts, scope, staticBase]);
+
+  useEffect(() => {
+    if (!useApi) return;
+    setLoaded(false);
+    fetch("/api/shop/products?status=active")
+      .then(async (r) => {
+        if (!r.ok) throw new Error("API error");
+        const data = await r.json();
+        return data.products as Product[];
+      })
+      .then((products) => {
+        setApiProducts(products);
+        setLoaded(true);
+      })
+      .catch(() => {
+        setApiProducts([]);
+        setLoaded(true);
+      });
+  }, [useApi]);
 
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>(initialSort);
@@ -42,7 +77,7 @@ export function ShopView({
   const [selectedColours, setSelectedColours] = useState<string[]>(
     initialColour ? [initialColour] : [],
   );
-  const [maxPrice, setMaxPrice] = useState(4000);
+  const [maxPrice, setMaxPrice] = useState(DEFAULT_MAX);
   const [visible, setVisible] = useState(8);
 
   const filtered = useMemo(() => {
@@ -58,26 +93,22 @@ export function ShopView({
 
     return [...list].sort((a, b) => {
       switch (sort) {
-        case "price-asc":
-          return a.price - b.price;
-        case "price-desc":
-          return b.price - a.price;
-        case "popularity":
-          return b.popularity - a.popularity;
-        default:
-          return b.addedOn.localeCompare(a.addedOn);
+        case "price-asc": return a.price - b.price;
+        case "price-desc": return b.price - a.price;
+        case "popularity": return (b.popularity || 0) - (a.popularity || 0);
+        default: return (b.addedOn || "").localeCompare(a.addedOn || "");
       }
     });
   }, [base, query, fabrics, selectedColours, sizes, maxPrice, sort]);
 
   const activeCount =
-    fabrics.length + selectedColours.length + sizes.length + (maxPrice < 4000 ? 1 : 0);
+    fabrics.length + selectedColours.length + sizes.length + (maxPrice < DEFAULT_MAX ? 1 : 0);
 
   function clearAll() {
     setFabrics([]);
     setSizes([]);
     setSelectedColours([]);
-    setMaxPrice(4000);
+    setMaxPrice(DEFAULT_MAX);
     setQuery("");
   }
 
@@ -97,6 +128,21 @@ export function ShopView({
     />
   );
 
+  if (useApi && !loaded) {
+    return (
+      <div className="grid gap-10 lg:grid-cols-[240px_1fr] lg:gap-14">
+        <aside className="hidden lg:block">
+          <div className="sticky top-28">{filterPanel}</div>
+        </aside>
+        <div>
+          <div className="pt-10">
+            <ProductGridSkeleton count={8} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-10 lg:grid-cols-[240px_1fr] lg:gap-14">
       <aside className="hidden lg:block">
@@ -110,9 +156,7 @@ export function ShopView({
           </p>
 
           <div className="flex flex-1 items-center justify-end gap-2">
-            <label htmlFor="shop-search" className="sr-only">
-              Search products
-            </label>
+            <label htmlFor="shop-search" className="sr-only">Search products</label>
             <input
               id="shop-search"
               value={query}
@@ -120,9 +164,7 @@ export function ShopView({
               placeholder="Search"
               className="min-h-11 w-32 border-b border-border bg-transparent px-1 text-[13px] focus:border-foreground focus:outline-none sm:w-44"
             />
-            <label htmlFor="shop-sort" className="sr-only">
-              Sort products
-            </label>
+            <label htmlFor="shop-sort" className="sr-only">Sort products</label>
             <select
               id="shop-sort"
               value={sort}
@@ -130,18 +172,13 @@ export function ShopView({
               className="min-h-11 border-b border-border bg-transparent px-1 text-[13px] focus:border-foreground focus:outline-none"
             >
               {SORTS.map((s) => (
-                <option key={s.key} value={s.key}>
-                  {s.label}
-                </option>
+                <option key={s.key} value={s.key}>{s.label}</option>
               ))}
             </select>
 
             <Sheet>
               <SheetTrigger asChild>
-                <button
-                  type="button"
-                  className="flex min-h-11 items-center gap-2 border border-border px-3 text-[12px] tracking-[0.1em] uppercase lg:hidden"
-                >
+                <button type="button" className="flex min-h-11 items-center gap-2 border border-border px-3 text-[12px] tracking-[0.1em] uppercase lg:hidden">
                   <SlidersHorizontal className="h-3.5 w-3.5" />
                   Filters{activeCount > 0 && ` (${activeCount})`}
                 </button>
@@ -157,18 +194,11 @@ export function ShopView({
         {activeCount > 0 && (
           <div className="flex flex-wrap items-center gap-2 pt-4">
             {[...fabrics, ...selectedColours, ...sizes].map((tag) => (
-              <span
-                key={tag}
-                className="border border-border px-2.5 py-1 text-[11px] tracking-[0.1em] uppercase"
-              >
+              <span key={tag} className="border border-border px-2.5 py-1 text-[11px] tracking-[0.1em] uppercase">
                 {tag.replace(/-/g, " ")}
               </span>
             ))}
-            <button
-              type="button"
-              onClick={clearAll}
-              className="flex items-center gap-1 text-[11px] tracking-[0.1em] text-muted-foreground uppercase hover:text-foreground"
-            >
+            <button type="button" onClick={clearAll} className="flex items-center gap-1 text-[11px] tracking-[0.1em] text-muted-foreground uppercase hover:text-foreground">
               <X className="h-3 w-3" /> Clear all filters
             </button>
           </div>
@@ -178,14 +208,8 @@ export function ShopView({
           {filtered.length === 0 ? (
             <div className="border border-dashed border-border px-6 py-20 text-center">
               <p className="font-display text-2xl">No shirts match these filters</p>
-              <p className="mt-3 text-[13px] text-muted-foreground">
-                Try removing a colour or widening the price range.
-              </p>
-              <button
-                type="button"
-                onClick={clearAll}
-                className="mt-6 min-h-11 border border-border px-6 text-[11px] tracking-[0.18em] uppercase hover:bg-secondary"
-              >
+              <p className="mt-3 text-[13px] text-muted-foreground">Try removing a colour or widening the price range.</p>
+              <button type="button" onClick={clearAll} className="mt-6 min-h-11 border border-border px-6 text-[11px] tracking-[0.18em] uppercase hover:bg-secondary">
                 Clear All Filters
               </button>
             </div>
@@ -194,11 +218,7 @@ export function ShopView({
               <ProductGrid products={filtered.slice(0, visible)} columns={3} />
               {filtered.length > visible && (
                 <div className="mt-14 text-center">
-                  <button
-                    type="button"
-                    onClick={() => setVisible((v) => v + 8)}
-                    className="min-h-12 border border-foreground px-10 text-[11px] font-medium tracking-[0.18em] uppercase transition-colors hover:bg-foreground hover:text-primary-foreground"
-                  >
+                  <button type="button" onClick={() => setVisible((v) => v + 8)} className="min-h-12 border border-foreground px-10 text-[11px] font-medium tracking-[0.18em] uppercase transition-colors hover:bg-foreground hover:text-primary-foreground">
                     Load More
                   </button>
                 </div>
@@ -233,20 +253,10 @@ function FilterPanel(props: {
         <fieldset>
           <legend className="eyebrow mb-3">Fabric</legend>
           <div className="space-y-2">
-            {(
-              [
-                { key: "pure-linen", label: "Pure Linen" },
-                { key: "linen-blend", label: "Linen Blend" },
-              ] as const
-            ).map((f) => (
-              <label key={f.key} className="flex min-h-9 cursor-pointer items-center gap-2.5 text-[13px]">
-                <input
-                  type="checkbox"
-                  checked={props.fabrics.includes(f.key)}
-                  onChange={() => toggle(props.fabrics, f.key, props.setFabrics)}
-                  className="h-3.5 w-3.5 accent-[oklch(0.505_0.045_115)]"
-                />
-                {f.label}
+            {(["pure-linen", "linen-blend"] as const).map((f) => (
+              <label key={f} className="flex min-h-9 cursor-pointer items-center gap-2.5 text-[13px]">
+                <input type="checkbox" checked={props.fabrics.includes(f)} onChange={() => toggle(props.fabrics, f, props.setFabrics)} className="h-3.5 w-3.5 accent-[oklch(0.505_0.045_115)]" />
+                {f === "pure-linen" ? "Pure Linen" : "Linen Blend"}
               </label>
             ))}
           </div>
@@ -259,23 +269,9 @@ function FilterPanel(props: {
           {colours.map((c) => {
             const active = props.selectedColours.includes(c.slug);
             return (
-              <button
-                key={c.slug}
-                type="button"
-                aria-pressed={active}
-                onClick={() => toggle(props.selectedColours, c.slug, props.setSelectedColours)}
-                className={cn(
-                  "flex min-h-9 items-center gap-2 text-left text-[12px]",
-                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <span
-                  className={cn(
-                    "h-3.5 w-3.5 rounded-full border",
-                    active ? "border-foreground ring-1 ring-foreground ring-offset-2" : "border-border",
-                  )}
-                  style={{ backgroundColor: c.hex }}
-                />
+              <button key={c.slug} type="button" aria-pressed={active} onClick={() => toggle(props.selectedColours, c.slug, props.setSelectedColours)}
+                className={cn("flex min-h-9 items-center gap-2 text-left text-[12px]", active ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
+                <span className={cn("h-3.5 w-3.5 rounded-full border", active ? "border-foreground ring-1 ring-foreground ring-offset-2" : "border-border")} style={{ backgroundColor: c.hex }} />
                 {c.name}
               </button>
             );
@@ -289,16 +285,8 @@ function FilterPanel(props: {
           {SIZES.map((s) => {
             const active = props.sizes.includes(s);
             return (
-              <button
-                key={s}
-                type="button"
-                aria-pressed={active}
-                onClick={() => toggle(props.sizes, s, props.setSizes)}
-                className={cn(
-                  "min-h-10 min-w-11 border px-2 text-[12px]",
-                  active ? "border-foreground bg-foreground text-primary-foreground" : "border-border",
-                )}
-              >
+              <button key={s} type="button" aria-pressed={active} onClick={() => toggle(props.sizes, s, props.setSizes)}
+                className={cn("min-h-10 min-w-11 border px-2 text-[12px]", active ? "border-foreground bg-foreground text-primary-foreground" : "border-border")}>
                 {s}
               </button>
             );
@@ -308,28 +296,13 @@ function FilterPanel(props: {
 
       <fieldset>
         <legend className="eyebrow mb-3">Price</legend>
-        <label htmlFor="price-range" className="sr-only">
-          Maximum price
-        </label>
-        <input
-          id="price-range"
-          type="range"
-          min={1500}
-          max={4000}
-          step={250}
-          value={props.maxPrice}
-          onChange={(e) => props.setMaxPrice(Number(e.target.value))}
-          className="w-full accent-[oklch(0.505_0.045_115)]"
-        />
-        <p className="mt-2 text-[12px] text-muted-foreground">Up to ₹{props.maxPrice.toLocaleString("en-IN")}</p>
+        <label htmlFor="price-range" className="sr-only">Maximum price</label>
+        <input id="price-range" type="range" min={1500} max={4000} step={250} value={props.maxPrice} onChange={(e) => props.setMaxPrice(Number(e.target.value))} className="w-full accent-[oklch(0.505_0.045_115)]" />
+        <p className="mt-2 text-[12px] text-muted-foreground">Up to Rs. {props.maxPrice.toLocaleString("en-IN")}</p>
       </fieldset>
 
       {props.activeCount > 0 && (
-        <button
-          type="button"
-          onClick={props.onClear}
-          className="min-h-11 w-full border border-border text-[11px] tracking-[0.16em] uppercase hover:bg-secondary"
-        >
+        <button type="button" onClick={props.onClear} className="min-h-11 w-full border border-border text-[11px] tracking-[0.16em] uppercase hover:bg-secondary">
           Clear All Filters
         </button>
       )}

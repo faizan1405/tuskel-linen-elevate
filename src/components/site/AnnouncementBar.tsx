@@ -1,16 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { site } from "@/lib/site";
+import { useSiteConfig } from "@/lib/site-config";
 
 export function AnnouncementBar() {
+  const { announcements, hydrated } = useSiteConfig();
   const [index, setIndex] = useState(0);
-  const messages = site.announcements;
+  const messages = announcements.length > 0 ? announcements : [];
 
   useEffect(() => {
+    if (!hydrated || messages.length === 0) return;
     const id = window.setInterval(() => setIndex((i) => (i + 1) % messages.length), 4200);
     return () => window.clearInterval(id);
-  }, [messages.length]);
+  }, [messages.length, hydrated]);
+
+  if (!hydrated || messages.length === 0) return null;
 
   return (
     <div className="relative z-50 h-9 overflow-hidden bg-foreground text-primary-foreground">
