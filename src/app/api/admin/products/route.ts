@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectDb, ProductModel } from "@/lib/db/models";
+import { requireAdminAuth } from "@/lib/admin/auth-middleware";
 
 export async function GET(req: Request) {
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
   try {
     await connectDb();
     const docs = await ProductModel.find().sort({ createdAt: -1 }).lean();
@@ -39,6 +42,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
   try {
     const body = await req.json();
     await connectDb();

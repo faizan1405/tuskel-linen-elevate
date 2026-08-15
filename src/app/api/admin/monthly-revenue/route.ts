@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectDb, OrderModel } from "@/lib/db/models";
+import { requireAdminAuth } from "@/lib/admin/auth-middleware";
 
 export async function GET() {
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
   try {
     await connectDb();
     const now = new Date();

@@ -121,10 +121,12 @@ function ProductModal({
   product,
   onClose,
   onSave,
+  onUpload,
 }: {
   product: AdminProduct | null;
   onClose: () => void;
   onSave: (p: AdminProduct) => void;
+  onUpload: (data: { image: string; folder?: string }) => Promise<{ url: string }>;
 }) {
   const editing = !!product;
   const blank: Partial<AdminProduct> = {
@@ -232,7 +234,7 @@ function ProductModal({
             </div>
           </div>
 
-          <ImageUploader images={form.images || []} onChange={(imgs) => update("images", imgs)} />
+          <ImageUploader images={form.images || []} onChange={(imgs) => update("images", imgs)} onUpload={onUpload} />
 
           <div className="space-y-2">
             <Label>Sizes Available</Label>
@@ -446,8 +448,14 @@ export default function ProductsPage() {
           </DialogContent>
         </Dialog>
 
-        {isAdding && <ProductModal product={null} onClose={() => setIsAdding(false)} onSave={handleSave} />}
-        {editingProduct && <ProductModal product={editingProduct} onClose={() => setEditingProduct(null)} onSave={handleSave} />}
+        {isAdding && <ProductModal product={null} onClose={() => setIsAdding(false)} onSave={handleSave} onUpload={async (data: { image: string; folder?: string }) => {
+          const result = await uploadMutation.mutateAsync(data);
+          return { url: result.url };
+        }} />}
+        {editingProduct && <ProductModal product={editingProduct} onClose={() => setEditingProduct(null)} onSave={handleSave} onUpload={async (data: { image: string; folder?: string }) => {
+          const result = await uploadMutation.mutateAsync(data);
+          return { url: result.url };
+        }} />}
       </div>
   );
 }

@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { connectDb, ProductModel } from "@/lib/db/models";
+import { requireAdminAuth } from "@/lib/admin/auth-middleware";
 
 const INTERNAL_FIELDS = new Set(["id", "_id", "__v", "createdAt", "updatedAt"]);
 
 export async function PATCH(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
   try {
     const body = await _req.json();
     const { slug } = await params;
@@ -23,6 +26,8 @@ export async function PATCH(_req: Request, { params }: { params: Promise<{ slug:
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
   try {
     const { slug } = await params;
     await connectDb();

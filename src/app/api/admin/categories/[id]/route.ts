@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectDb, CategoryModel } from "@/lib/db/models";
+import { requireAdminAuth } from "@/lib/admin/auth-middleware";
 
 export async function PATCH(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
   try {
     const { id } = await params;
     const body = await _req.json();
@@ -16,6 +19,8 @@ export async function PATCH(_req: Request, { params }: { params: Promise<{ id: s
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
   try {
     const { id } = await params;
     await connectDb();

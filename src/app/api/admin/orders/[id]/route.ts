@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectDb, OrderModel } from "@/lib/db/models";
+import { requireAdminAuth } from "@/lib/admin/auth-middleware";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
   try {
     const body = await req.json();
     const { id } = await params;

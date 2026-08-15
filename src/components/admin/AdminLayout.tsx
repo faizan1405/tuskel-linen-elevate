@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { FormEvent } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -14,6 +14,8 @@ import {
   Settings,
   ChevronUp,
   PanelLeft,
+  Menu,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -69,9 +71,15 @@ function SidebarNav() {
   );
 }
 
-function AdminSidebarInner() {
+function AdminSidebarInner({ onNavigate }: { onNavigate?: () => void }) {
   const { logout } = useAdminAuth();
+  const pathname = usePathname();
   const router = useRouter();
+
+  const handleNavClick = useCallback((href: string) => {
+    router.push(href);
+    onNavigate?.();
+  }, [router, onNavigate]);
 
   const handleLogout = async () => {
     await logout();
@@ -93,7 +101,28 @@ function AdminSidebarInner() {
       </div>
 
       <div className="flex-1 overflow-auto py-3">
-        <SidebarNav />
+        <nav className="flex flex-col gap-1 px-2">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active =
+              pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+            return (
+              <button
+                key={item.href}
+                type="button"
+                onClick={() => handleNavClick(item.href)}
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors text-left w-full ${
+                  active
+                    ? "bg-accent font-medium text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span>{item.title}</span>
+              </button>
+            );
+          })}
+        </nav>
       </div>
 
       <div className="border-t p-2">
@@ -138,6 +167,7 @@ function AdminSidebarInner() {
 function AdminShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAdminAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   if (!isAuthenticated) {
     return <AdminLogin />;
@@ -145,7 +175,21 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
-      {!collapsed && <AdminSidebarInner />}
+      {/* Desktop sidebar */}
+      <div className="hidden md:flex">
+        {!collapsed && <AdminSidebarInner />}
+      </div>
+
+      {/* Mobile sidebar overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div className="absolute left-0 top-0 h-full">
+            <AdminSidebarInner onNavigate={() => setMobileOpen(false)} />
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-1 flex-col min-w-0">
         <header className="flex h-14 items-center gap-4 border-b px-4 lg:px-6 shrink-0">
           <Button
@@ -156,7 +200,18 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           >
             <PanelLeft className="h-4 w-4" />
           </Button>
-          <Separator orientation="vertical" className="h-4" />
+
+          {/* Mobile hamburger */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden h-7 w-7"
+            onClick={() => setMobileOpen((v) => !v)}
+          >
+            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </Button>
+
+          <Separator orientation="vertical" className="h-4 hidden md:block" />
           <div className="flex-1" />
           <div className="text-xs text-muted-foreground">
             {new Date().toLocaleDateString("en-IN", {
@@ -180,6 +235,14 @@ function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [redirectTo, setRedirectTo] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      setRedirectTo(params.get("redirect") || "");
+    }
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -190,7 +253,7 @@ function AdminLogin() {
       setError(result.error || "Invalid credentials.");
       setPassword("");
     } else {
-      router.push("/admin");
+      router.push(redirectTo || "/admin");
       router.refresh();
     }
     setLoading(false);

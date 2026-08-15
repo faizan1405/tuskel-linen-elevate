@@ -25,6 +25,7 @@ const STATUS_ALL = "all" as const;
 function InquiryDetailModal({ inquiry, onClose }: { inquiry: AdminInquiry; onClose: () => void }) {
   const [status, setStatus] = useState<AdminInquiry["status"]>(inquiry.status);
   const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const { mutate: updateStatus } = useAdminUpdateInquiry();
 
@@ -34,13 +35,20 @@ function InquiryDetailModal({ inquiry, onClose }: { inquiry: AdminInquiry; onClo
     updateStatus({ id: inquiry.id, data: { status: newStatus } }, {
       onSuccess: () => {
         setSaving(false);
-        onClose();
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2000);
       },
       onError: (e: Error) => {
         toast.error(e.message);
         setSaving(false);
       },
     });
+  };
+
+  const handleClose = () => {
+    // Only close if status was saved (or user confirms leaving unsaved changes)
+    if (saving) return; // don't close while saving
+    onClose();
   };
 
   return (

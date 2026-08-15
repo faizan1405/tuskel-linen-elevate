@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { uploadImage } from "@/lib/cloudinary";
+import { requireAdminAuth } from "@/lib/admin/auth-middleware";
 
 export async function POST(req: Request) {
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
   try {
     const body = await req.json();
     const { image, folder } = body;

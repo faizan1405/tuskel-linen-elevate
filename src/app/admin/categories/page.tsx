@@ -63,11 +63,23 @@ function CategoryModal({
         cache: "no-store",
       });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Upload failed");
+      if (!res.ok) {
+        const errMsg = result.error || `Upload failed (HTTP ${res.status})`;
+        toast.error(errMsg);
+        return;
+      }
+      if (!result.url) {
+        toast.error("Upload succeeded but no image URL returned");
+        return;
+      }
       setForm({ ...form, image: result.url });
       toast.success("Image uploaded");
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Upload failed"); }
-    setUploading(false);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Upload failed — check your connection";
+      toast.error(msg);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const save = () => {

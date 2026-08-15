@@ -172,10 +172,10 @@ export default function OrdersPage() {
                 {isLoading ? (
                   <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>
                 ) : (() => {
+                  const q = search.toLowerCase();
                   const visible = typedOrders.filter((o: AdminOrder) => {
-                    const q = search.toLowerCase();
-                    if (q) return o.orderNo.toLowerCase().includes(q) || o.customer.toLowerCase().includes(q) || o.email.toLowerCase().includes(q);
                     if (statusFilter !== STATUS_ALL && o.status !== statusFilter) return false;
+                    if (q) return o.orderNo.toLowerCase().includes(q) || o.customer.toLowerCase().includes(q) || o.email.toLowerCase().includes(q);
                     return true;
                   });
                   if (visible.length === 0) {
