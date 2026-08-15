@@ -376,6 +376,8 @@ export default function ProductsPage() {
         modelNote: p.modelNote, newArrival: p.newArrival, bestSeller: p.bestSeller,
         popularity: p.popularity, addedOn: p.addedOn, _stock: p._stock ?? 0,
         _status: p._status || "draft",
+      }, {
+        onSuccess: () => setIsAdding(false),
       });
     } else {
       if (!p.slug) return;

@@ -47,10 +47,23 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     await connectDb();
+
+    // Generate slug from name if not provided — the schema requires a unique slug
+    if (!body.slug && body.name) {
+      body.slug = body.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
+
     const doc = await ProductModel.create(body);
-    return NextResponse.json({ product: doc.toObject() }, { status: 201 });
+    const product = doc.toObject();
+    return NextResponse.json({
+      products: [product],
+    }, { status: 201 });
   } catch (error) {
     console.error("[admin/products] POST error:", error);
-    return NextResponse.json({ error: "Failed to create product" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Failed to create product";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
