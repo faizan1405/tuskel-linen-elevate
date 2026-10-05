@@ -33,63 +33,36 @@ const STATUS_OPTS = ["active", "draft", "archived"] as const;
 type StatusOpt = typeof STATUS_OPTS[number];
 const ALL_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"] as const;
 
-function ImageUploader({ images, onChange, onUpload }: { images: string[]; onChange: (urls: string[]) => void; onUpload?: (data: { image: string; folder?: string }) => Promise<{ url: string }> }) {
-  const [uploading, setUploading] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+function ImageUploader({ images, onChange }: { images: string[]; onChange: (urls: string[]) => void; onUpload?: (data: { image: string; folder?: string }) => Promise<{ url: string }> }) {
+  const [urlInput, setUrlInput] = useState("");
 
-  const handleUpload = async (file: File) => {
-    if (!file.type.startsWith("image/")) { toast.error("Only image files allowed"); return; }
-    setUploading(true);
-    try {
-      const reader = new FileReader();
-      const dataUrl = await new Promise<string>((resolve) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-      if (onUpload) {
-        const result = await onUpload({ image: dataUrl, folder: "tuskel/products" });
-        onChange([...images, result.url]);
-      } else {
-        onChange([...images, dataUrl]);
-      }
-      toast.success("Image uploaded");
-    } catch { toast.error("Upload failed"); }
-    setUploading(false);
+  const handleAddUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!urlInput.trim()) return;
+    onChange([...images, urlInput.trim()]);
+    setUrlInput("");
+    toast.success("Image URL added");
   };
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       <Label className="text-sm font-medium">Product Images</Label>
-      <div
-        className={`relative rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-all duration-200 ${
-          dragOver ? "border-primary bg-primary/[0.03] scale-[1.01]" : "border-border hover:border-primary/40 hover:bg-muted/20"
-        }`}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleUpload(f); }}
-        onClick={() => inputRef.current?.click()}
-      >
-        <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); if (inputRef.current) inputRef.current.value = ""; }} />
-        {uploading ? (
-          <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-8 w-8 text-primary animate-spin" />
-            <p className="text-sm text-muted-foreground font-medium">Uploading image…</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-10 w-10 rounded-full bg-muted/60 flex items-center justify-center">
-              <ImagePlus className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Click or drag to upload</p>
-              <p className="text-xs text-muted-foreground/70 mt-0.5">PNG, JPG up to 10MB</p>
-            </div>
-          </div>
-        )}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Paste image URL (e.g. Unsplash or static path)"
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          className="h-9 text-sm"
+        />
+        <Button type="button" variant="secondary" onClick={handleAddUrl} className="h-9 text-xs font-medium shrink-0">
+          Add URL
+        </Button>
       </div>
+      <p className="text-xs text-muted-foreground">
+        Direct runtime file upload is disabled for MVP until Hostinger persistent media storage is configured. Provide image URLs or static asset paths.
+      </p>
       {images.length > 0 && (
-        <div className="flex gap-2.5 flex-wrap">
+        <div className="flex gap-2.5 flex-wrap pt-1">
           {images.map((url, idx) => (
             <div key={idx} className="relative group w-16 h-16">
               <img src={url} alt="" className="w-full h-full object-cover rounded-lg border border-border/60" />
@@ -569,7 +542,7 @@ export default function ProductsPage() {
           <DialogHeader>
             <DialogTitle>Delete product?</DialogTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              This will permanently delete the product and its Cloudinary images. This action cannot be undone.
+              This will permanently delete the product. This action cannot be undone.
             </p>
           </DialogHeader>
           <DialogFooter className="gap-2">

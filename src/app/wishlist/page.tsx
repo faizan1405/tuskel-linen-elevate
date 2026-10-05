@@ -53,7 +53,7 @@ export default function Page() {
                       className={cn("min-h-10 min-w-11 border text-[12px]", sizes[p.slug] === s ? "border-foreground bg-foreground text-primary-foreground" : "border-border")}>{s}</button>
                   ))}
                   <button type="button" disabled={!sizes[p.slug]}
-                    onClick={() => { const s = sizes[p.slug]; if (!s) return; addToCart(p.slug, s); setCartOpen(true); toast.success("Added to bag"); }}
+                    onClick={() => { const s = sizes[p.slug]; if (!s) return; addToCart(p.slug, s, 1, p); setCartOpen(true); toast.success("Added to bag"); }}
                     className="ml-auto min-h-11 bg-foreground px-6 text-[11px] tracking-[0.16em] text-primary-foreground uppercase disabled:opacity-40">Add to Bag</button>
                 </div>
                 {!sizes[p.slug] && <p className="mt-2 text-[12px] text-muted-foreground">Choose a size to add this to your bag.</p>}

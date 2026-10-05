@@ -1,19 +1,16 @@
-import mongoose from "mongoose";
-import { ProductModel } from "../src/lib/db/models";
+import { PrismaClient } from "@prisma/client";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://faizankhan1405_db_user:yRZ9pMjdRFrMJzqT@cluster0.2tokikk.mongodb.net/tuskel?retryWrites=true&w=majority";
+const prisma = new PrismaClient();
 
 async function seed() {
   try {
-    await mongoose.connect(MONGODB_URI);
-    console.log("Connected to MongoDB");
-
-    const count = await ProductModel.countDocuments({});
+    console.log("Connecting to MySQL via Prisma...");
+    const count = await prisma.product.count();
     console.log(`Existing products: ${count}`);
 
     if (count > 0) {
       console.log("Products already exist, skipping seed.");
-      await mongoose.disconnect();
+      await prisma.$disconnect();
       return;
     }
 
@@ -48,7 +45,8 @@ async function seed() {
         newArrival: true,
         bestSeller: false,
         popularity: 100,
-        status: "active"
+        status: "active",
+        stock: 100
       },
       {
         name: "Linen Saree - Sage Green",
@@ -78,7 +76,8 @@ async function seed() {
         newArrival: true,
         bestSeller: false,
         popularity: 90,
-        status: "active"
+        status: "active",
+        stock: 100
       },
       {
         name: "Linen Blend Saree - Blush Pink",
@@ -108,7 +107,8 @@ async function seed() {
         newArrival: false,
         bestSeller: true,
         popularity: 95,
-        status: "active"
+        status: "active",
+        stock: 100
       },
       {
         name: "Linen Saree - Navy Blue",
@@ -138,7 +138,8 @@ async function seed() {
         newArrival: false,
         bestSeller: true,
         popularity: 85,
-        status: "active"
+        status: "active",
+        stock: 100
       },
       {
         name: "Linen Blend Saree - Mustard Yellow",
@@ -168,7 +169,8 @@ async function seed() {
         newArrival: true,
         bestSeller: false,
         popularity: 75,
-        status: "active"
+        status: "active",
+        stock: 100
       },
       {
         name: "Linen Saree - Terracotta",
@@ -198,17 +200,22 @@ async function seed() {
         newArrival: true,
         bestSeller: false,
         popularity: 80,
-        status: "active"
+        status: "active",
+        stock: 100
       }
     ];
 
-    await ProductModel.insertMany(products);
-    console.log(`Seeded ${products.length} products successfully!`);
+    for (const p of products) {
+      await prisma.product.create({
+        data: p,
+      });
+    }
 
-    await mongoose.disconnect();
-    console.log("Disconnected from MongoDB");
+    console.log(`Seeded ${products.length} products successfully!`);
+    await prisma.$disconnect();
   } catch (error: any) {
     console.error("Seed error:", error.message);
+    await prisma.$disconnect();
     process.exit(1);
   }
 }

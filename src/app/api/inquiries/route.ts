@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { connectDb, InquiryModel } from "@/lib/db/models";
+import { prisma } from "@/lib/db/prisma";
 
 export async function POST(req: Request) {
   try {
@@ -10,18 +10,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Name, email, and message are required" }, { status: 400 });
     }
 
-    await connectDb();
-    const inquiry = await InquiryModel.create({
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone?.trim() || "",
-      subject: subject?.trim() || "Website Inquiry",
-      message: message.trim(),
-      status: "new",
-      createdAt: new Date().toISOString(),
+    const inquiry = await prisma.inquiry.create({
+      data: {
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone?.trim() || "",
+        subject: subject?.trim() || "Website Inquiry",
+        message: message.trim(),
+        status: "new",
+      },
     });
 
-    return NextResponse.json({ inquiry: { id: String(inquiry._id) } }, { status: 201 });
+    return NextResponse.json({ inquiry: { id: inquiry.id } }, { status: 201 });
   } catch (error) {
     console.error("[/api/inquiries] POST error:", error);
     return NextResponse.json({ error: "Failed to submit inquiry" }, { status: 500 });

@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { verifyAdminSessionToken } from "@/lib/admin/session";
 
 export async function GET() {
   const cookieStore = await cookies();
   const authCookie = cookieStore.get("tuskel.admin.auth");
-  return NextResponse.json({ authenticated: authCookie?.value === "1" });
+  const authResult = await verifyAdminSessionToken(authCookie?.value);
+  return NextResponse.json({ authenticated: authResult.valid });
 }
 
 export async function DELETE() {

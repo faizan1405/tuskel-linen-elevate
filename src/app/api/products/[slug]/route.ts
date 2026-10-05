@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { connectDb, ProductModel } from "@/lib/db/models";
+import { prisma } from "@/lib/db/prisma";
+import { formatProduct } from "@/lib/db/formatters";
 
 /**
  * GET /api/products/[slug]
- * Returns a single product by slug, checking both static catalogue and MongoDB.
- * Static products are the "base" catalogue; DB products override/expand.
+ * Returns a single product by slug, checking both MySQL and static catalogue.
+ * MySQL products override/expand the static catalogue.
  */
 export async function GET(
   _req: Request,
@@ -16,38 +17,16 @@ export async function GET(
       return NextResponse.json({ error: "Slug is required" }, { status: 400 });
     }
 
-    // Try MongoDB first (admin-created products take precedence)
-    await connectDb();
-    const doc = await ProductModel.findOne({ slug, _status: { $ne: "archived" } }).lean();
+    // Try MySQL first (admin-created products take precedence)
+    const doc = await prisma.product.findFirst({
+      where: {
+        slug,
+        status: { not: "archived" },
+      },
+    });
 
     if (doc) {
-      return NextResponse.json({
-        product: {
-          id: String(doc._id),
-          slug: doc.slug,
-          name: doc.name,
-          fabric: doc.fabric,
-          fabricLabel: doc.fabricLabel,
-          colorName: doc.colorName,
-          colorSlug: doc.colorSlug,
-          swatch: doc.swatch,
-          mrp: doc.mrp,
-          price: doc.price,
-          images: doc.images,
-          sizes: doc.sizes,
-          summary: doc.summary,
-          details: doc.details,
-          care: doc.care,
-          fit: doc.fit,
-          modelNote: doc.modelNote,
-          newArrival: doc.newArrival,
-          bestSeller: doc.bestSeller,
-          popularity: doc.popularity,
-          addedOn: doc.addedOn,
-          _stock: doc._stock ?? 0,
-          _status: doc._status ?? "active",
-        },
-      });
+      return NextResponse.json({ product: formatProduct(doc) });
     }
 
     // Fall back to static catalogue

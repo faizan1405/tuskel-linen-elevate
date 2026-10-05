@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { connectDb, ProductModel } from "@/lib/db/models";
+import { prisma } from "@/lib/db/prisma";
+import { formatProduct } from "@/lib/db/formatters";
+import { requireAdminAuth } from "@/lib/admin/auth-middleware";
 
 export const dynamic = "force-dynamic";
 
@@ -34,8 +36,8 @@ const seedProducts = [
     newArrival: true,
     bestSeller: false,
     popularity: 100,
-    _status: "active",
-    _stock: 100
+    status: "active",
+    stock: 100
   },
   {
     name: "Linen Saree - Sage Green",
@@ -65,8 +67,8 @@ const seedProducts = [
     newArrival: true,
     bestSeller: false,
     popularity: 90,
-    _status: "active",
-    _stock: 100
+    status: "active",
+    stock: 100
   },
   {
     name: "Linen Blend Saree - Blush Pink",
@@ -96,8 +98,8 @@ const seedProducts = [
     newArrival: false,
     bestSeller: true,
     popularity: 95,
-    _status: "active",
-    _stock: 100
+    status: "active",
+    stock: 100
   },
   {
     name: "Linen Saree - Navy Blue",
@@ -127,8 +129,8 @@ const seedProducts = [
     newArrival: false,
     bestSeller: true,
     popularity: 85,
-    _status: "active",
-    _stock: 100
+    status: "active",
+    stock: 100
   },
   {
     name: "Linen Blend Saree - Mustard Yellow",
@@ -158,8 +160,8 @@ const seedProducts = [
     newArrival: true,
     bestSeller: false,
     popularity: 75,
-    _status: "active",
-    _stock: 100
+    status: "active",
+    stock: 100
   },
   {
     name: "Linen Saree - Terracotta",
@@ -189,33 +191,73 @@ const seedProducts = [
     newArrival: true,
     bestSeller: false,
     popularity: 80,
-    _status: "active",
-    _stock: 100
+    status: "active",
+    stock: 100
   }
 ];
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Seed endpoint is disabled in production." },
+      { status: 403 }
+    );
+  }
+
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
+
   try {
-    await connectDb();
     const { searchParams } = new URL(req.url);
     const reset = searchParams.get("reset") === "true";
+
     if (reset) {
-      await ProductModel.deleteMany({});
+      await prisma.product.deleteMany({});
     }
-    const existing = await ProductModel.countDocuments({});
+
+    const existing = await prisma.product.count();
     if (existing > 0) {
-      const all = await ProductModel.find({}).lean();
+      const all = await prisma.product.findMany({});
       return NextResponse.json({
         message: "Products already exist",
         count: existing,
-        products: all
+        products: all.map(formatProduct),
       });
     }
-    const inserted = await ProductModel.insertMany(seedProducts);
+
+    for (const p of seedProducts) {
+      await prisma.product.create({
+        data: {
+          name: p.name,
+          slug: p.slug,
+          fabric: p.fabric,
+          fabricLabel: p.fabricLabel,
+          colorName: p.colorName,
+          colorSlug: p.colorSlug,
+          swatch: p.swatch,
+          mrp: p.mrp,
+          price: p.price,
+          images: p.images,
+          sizes: p.sizes,
+          summary: p.summary,
+          details: p.details,
+          care: p.care,
+          fit: p.fit,
+          modelNote: p.modelNote,
+          newArrival: p.newArrival,
+          bestSeller: p.bestSeller,
+          popularity: p.popularity,
+          status: p.status,
+          stock: p.stock,
+        },
+      });
+    }
+
+    const created = await prisma.product.findMany({});
     return NextResponse.json({
       message: "Products seeded successfully",
-      count: inserted.length,
-      products: inserted
+      count: created.length,
+      products: created.map(formatProduct),
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -223,9 +265,15 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Seed endpoint is disabled in production." },
+      { status: 403 }
+    );
+  }
+
   try {
-    await connectDb();
-    const existing = await ProductModel.countDocuments({});
+    const existing = await prisma.product.count();
     return NextResponse.json({ count: existing });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

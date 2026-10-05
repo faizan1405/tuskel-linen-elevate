@@ -17,7 +17,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const wished = hydrated && isWishlisted(product.slug);
 
   function choose(size: Size) {
-    addToCart(product.slug, size, 1);
+    addToCart(product.slug, size, 1, product);
     setQuickAdd(false);
     setCartOpen(true);
     toast.success(`${product.colorName} added — size ${size}`);

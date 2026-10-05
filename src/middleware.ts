@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { verifyAdminSessionToken } from "@/lib/admin/session";
 
 const ADMIN_PATHS = ["/admin", "/admin/products", "/admin/categories", "/admin/orders", "/admin/customers", "/admin/inquiries", "/admin/inventory", "/admin/settings"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow the login page at /admin through without auth check
@@ -16,7 +17,8 @@ export function middleware(request: NextRequest) {
   }
 
   const authCookie = request.cookies.get("tuskel.admin.auth");
-  const isAuthed = authCookie?.value === "1";
+  const authResult = await verifyAdminSessionToken(authCookie?.value);
+  const isAuthed = authResult.valid;
 
   if (!isAuthed) {
     const url = new URL("/admin", request.url);

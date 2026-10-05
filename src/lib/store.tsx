@@ -1,13 +1,26 @@
 "use client";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { products, type Product } from "./products";
+import { products as staticProducts, type Product } from "./products";
 import type { Size } from "./site";
 import { useSiteConfig } from "./site-config";
+
+export interface CartProductSnapshot {
+  id?: string | undefined;
+  slug: string;
+  name: string;
+  price: number;
+  mrp?: number | undefined;
+  images?: string[] | undefined;
+  fabric?: string | undefined;
+  fabricLabel?: string | undefined;
+  colorName?: string | undefined;
+}
 
 export interface CartLine {
   slug: string;
   size: Size;
   qty: number;
+  product?: CartProductSnapshot | undefined;
 }
 
 export interface WishlistEntry {
@@ -22,7 +35,7 @@ interface StoreValue {
   coupon: string | null;
   hydrated: boolean;
   setCartOpen: (open: boolean) => void;
-  addToCart: (slug: string, size: Size, qty?: number) => void;
+  addToCart: (slug: string, size: Size, qty?: number, productSnapshot?: Partial<Product>) => void;
   updateQty: (slug: string, size: Size, qty: number) => void;
   removeLine: (slug: string, size: Size) => void;
   clearCart: () => void;
@@ -63,6 +76,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [coupon, setCoupon] = useState<string | null>(null);
+  const [catalog, setCatalog] = useState<Map<string, Product>>(() => {
+    const map = new Map<string, Product>();
+    for (const p of staticProducts) {
+      map.set(p.slug, p);
+    }
+    return map;
+  });
 
   useEffect(() => {
     setCart(read<CartLine[]>("tuskel.cart", []));
@@ -71,6 +91,51 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setCoupon(read<string | null>("tuskel.coupon", null));
     setHydrated(true);
   }, []);
+
+  // Fetch active products from the API to include admin/MySQL created products
+  useEffect(() => {
+    fetch("/api/shop/products?status=active")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data?.products)) {
+          setCatalog((prev) => {
+            const next = new Map(prev);
+            for (const p of data.products) {
+              next.set(p.slug, p);
+            }
+            return next;
+          });
+        }
+      })
+      .catch(() => {
+        // Fall back gracefully to static products and snapshots
+      });
+  }, []);
+
+  // Hydrate any cart items that are neither in static catalogue nor catalog yet
+  useEffect(() => {
+    if (!hydrated || cart.length === 0) return;
+    const missingSlugs = cart
+      .map((l) => l.slug)
+      .filter((slug) => !catalog.has(slug));
+
+    if (missingSlugs.length === 0) return;
+
+    missingSlugs.forEach((slug) => {
+      fetch(`/api/products/${encodeURIComponent(slug)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.product) {
+            setCatalog((prev) => {
+              const next = new Map(prev);
+              next.set(slug, data.product);
+              return next;
+            });
+          }
+        })
+        .catch(() => {});
+    });
+  }, [cart, catalog, hydrated]);
 
   useEffect(() => {
     if (hydrated) window.localStorage.setItem("tuskel.cart", JSON.stringify(cart));
@@ -88,7 +153,41 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const value = useMemo<StoreValue>(() => {
     const lines = cart
       .map((line) => {
-        const product = products.find((p) => p.slug === line.slug);
+        // 1. Look in dynamic product catalog
+        let product: Product | undefined = catalog.get(line.slug);
+
+        // 2. Fallback to static products
+        if (!product) {
+          product = staticProducts.find((p) => p.slug === line.slug);
+        }
+
+        // 3. Fallback to snapshot saved on line in localStorage
+        if (!product && line.product && line.product.name) {
+          product = {
+            id: line.product.id || line.slug,
+            slug: line.slug,
+            name: line.product.name,
+            fabric: (line.product.fabric as any) || "pure-linen",
+            fabricLabel: line.product.fabricLabel || "Pure Linen",
+            colorName: line.product.colorName || "",
+            colorSlug: "",
+            swatch: "#f8f6f2",
+            mrp: line.product.mrp ?? line.product.price,
+            price: line.product.price,
+            images: line.product.images?.length ? line.product.images : ["/placeholder.jpg"],
+            sizes: [line.size],
+            summary: "",
+            details: [],
+            care: [],
+            fit: "Regular fit",
+            modelNote: "",
+            newArrival: false,
+            bestSeller: false,
+            popularity: 0,
+            addedOn: "",
+          };
+        }
+
         return product ? { ...line, product } : null;
       })
       .filter(Boolean) as Array<CartLine & { product: Product }>;
@@ -107,15 +206,49 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       coupon,
       hydrated,
       setCartOpen,
-      addToCart: (slug, size, qty = 1) => {
+      addToCart: (slug, size, qty = 1, productSnapshot) => {
+        const snap: CartProductSnapshot | undefined = productSnapshot
+          ? {
+              id: (productSnapshot as any).id || (productSnapshot as any)._id,
+              slug: productSnapshot.slug || slug,
+              name: productSnapshot.name || slug,
+              price: productSnapshot.price ?? 0,
+              mrp: productSnapshot.mrp,
+              images: productSnapshot.images || [],
+              fabric: productSnapshot.fabric,
+              fabricLabel: productSnapshot.fabricLabel,
+              colorName: productSnapshot.colorName,
+            }
+          : undefined;
+
         setCart((prev) => {
           const idx = prev.findIndex((l) => l.slug === slug && l.size === size);
-          if (idx === -1) return [...prev, { slug, size, qty }];
+          if (idx === -1) {
+            const newLine: CartLine = { slug, size, qty, product: snap };
+            return [...prev, newLine];
+          }
           const next = [...prev];
           const current = next[idx]!;
-          next[idx] = { ...current, qty: current.qty + qty };
+          const updatedLine: CartLine = {
+            ...current,
+            qty: current.qty + qty,
+            product: snap !== undefined ? snap : current.product,
+          };
+          next[idx] = updatedLine;
           return next;
         });
+
+        if (productSnapshot && productSnapshot.name) {
+          setCatalog((prev) => {
+            const next = new Map(prev);
+            const existing = prev.get(slug) || staticProducts.find((p) => p.slug === slug);
+            next.set(slug, {
+              ...(existing || {}),
+              ...productSnapshot,
+            } as Product);
+            return next;
+          });
+        }
       },
       updateQty: (slug, size, qty) =>
         setCart((prev) =>
@@ -148,7 +281,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       total,
       lines,
     };
-  }, [cart, wishlist, recentlyViewed, cartOpen, coupon, hydrated]);
+  }, [cart, wishlist, recentlyViewed, cartOpen, coupon, hydrated, catalog]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

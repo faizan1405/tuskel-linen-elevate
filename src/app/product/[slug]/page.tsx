@@ -132,7 +132,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   function add(then?: "checkout") {
     if (!product || !size) { if (!size) setSizeError(true); return; }
-    addToCart(product.slug, size, qty);
+    addToCart(product.slug, size, qty, product as any);
     setSizeError(false);
     if (then === "checkout") { window.location.href = "/checkout"; return; }
     setCartOpen(true);

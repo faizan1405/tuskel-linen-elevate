@@ -1,10 +1,7 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  MONGODB_URI: z.string().optional().default(""),
-  CLOUDINARY_CLOUD_NAME: z.string().optional().default(""),
-  CLOUDINARY_API_KEY: z.string().optional().default(""),
-  CLOUDINARY_API_SECRET: z.string().optional().default(""),
+  DATABASE_URL: z.string().optional().default(""),
   GOOGLE_CLIENT_SECRET: z.string().optional().default(""),
 });
 
@@ -15,10 +12,7 @@ const envSchema = z.object({
  */
 function getEnv() {
   const raw = {
-    MONGODB_URI: process.env["MONGODB_URI"] || "",
-    CLOUDINARY_CLOUD_NAME: process.env["CLOUDINARY_CLOUD_NAME"] || "",
-    CLOUDINARY_API_KEY: process.env["CLOUDINARY_API_KEY"] || "",
-    CLOUDINARY_API_SECRET: process.env["CLOUDINARY_API_SECRET"] || "",
+    DATABASE_URL: process.env["DATABASE_URL"] || "",
     GOOGLE_CLIENT_SECRET: process.env["GOOGLE_CLIENT_SECRET"] || "",
   };
 
@@ -26,7 +20,7 @@ function getEnv() {
     .filter(([_, val]) => !val)
     .map(([key]) => key);
 
-  if (missing.length > 0) {
+  if (missing.length > 0 && process.env.NODE_ENV === "production") {
     console.warn(`[env] Warning: Missing server-only env vars: ${missing.join(", ")}`);
   }
 
@@ -35,13 +29,16 @@ function getEnv() {
 
 export const ENV = getEnv();
 
+const isProd = process.env.NODE_ENV === "production";
+
 /**
  * Server-only admin credentials. NEVER exposed to the client bundle.
- * Defaults are hardcoded fallbacks for local development only.
+ * In production, ADMIN_PASSWORD must be configured in environment variables.
+ * Hardcoded fallbacks are only permitted for local development.
  */
 export const ADMIN_CREDENTIALS: { email: string; password: string } = {
-  email: process.env["ADMIN_EMAIL"] || "admin@tuskel.com",
-  password: process.env["ADMIN_PASSWORD"] || "Tuskel@2026",
+  email: (process.env["ADMIN_EMAIL"] || (isProd ? "" : "admin@tuskel.com")).trim().toLowerCase(),
+  password: process.env["ADMIN_PASSWORD"] || (isProd ? "" : "Tuskel@2026"),
 };
 
 /**
@@ -55,5 +52,7 @@ export const CLIENT_ENV = {
 } as const;
 
 if (!CLIENT_ENV.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
-  console.warn("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set. Google Sign-In will not work.");
+  if (process.env.NODE_ENV === "development") {
+    console.info("[env] NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured — Google Sign-In disabled.");
+  }
 }

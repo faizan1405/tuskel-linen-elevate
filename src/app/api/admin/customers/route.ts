@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
-import { connectDb, CustomerModel } from "@/lib/db/models";
+import { prisma } from "@/lib/db/prisma";
+import { formatCustomer } from "@/lib/db/formatters";
 import { requireAdminAuth } from "@/lib/admin/auth-middleware";
 
 export async function GET() {
   const authError = await requireAdminAuth();
   if (authError) return authError;
   try {
-    await connectDb();
-    const customers = await CustomerModel.find().sort({ createdAt: -1 }).lean();
-    return NextResponse.json({ customers: customers.map((c: any) => ({ ...c, id: String(c._id) })) });
+    const customers = await prisma.customer.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json({ customers: customers.map(formatCustomer) });
   } catch (error) {
     console.error("[admin/customers] GET error:", error);
     return NextResponse.json({ error: "Failed to fetch customers" }, { status: 500 });

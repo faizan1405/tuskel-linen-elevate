@@ -1,0 +1,149 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  fabric      String      // "pure-linen" | "linen-blend"
+  fabricLabel String
+  colorName   String
+  colorSlug   String
+  swatch      String
+  mrp         Float
+  price       Float
+  images      Json        // string[]
+  sizes       Json        // string[]
+  summary     String      @default("") @db.Text
+  details     Json        // string[]
+  care        Json        // string[]
+  fit         String      @default("")
+  modelNote   String      @default("") @db.Text
+  newArrival  Boolean     @default(false)
+  bestSeller  Boolean     @default(false)
+  popularity  Int         @default(0)
+  addedOn     String      @default("")
+  stock       Int         @default(0)
+  status      String      @default("draft") // "active" | "draft" | "archived"
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+
+  @@index([status])
+  @@index([fabric])
+  @@map("products")
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNo         String      @unique
+  customer        String
+  email           String
+  phone           String
+  shippingAddress String      @db.Text
+  subtotal        Float
+  discount        Float       @default(0)
+  shipping        Float       @default(0)
+  total           Float
+  paymentMethod   String      @default("Cash on Delivery")
+  paymentStatus   String      @default("pending")
+  status          String      @default("pending") // "pending"|"confirmed"|"processing"|"shipped"|"delivered"|"cancelled"|"returned"
+  placedOn        String
+  updatedOn       String
+  notes           String?     @db.Text
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  items           OrderItem[]
+
+  @@index([customer])
+  @@index([email])
+  @@index([status])
+  @@index([placedOn])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  slug      String
+  name      String
+  size      String
+  qty       Int
+  price     Float    // unit price at purchase
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([slug])
+  @@map("order_items")
+}
+
+model Customer {
+  id         String   @id @default(cuid())
+  name       String
+  email      String   @unique
+  phone      String
+  orders     Int      @default(0)
+  spent      Float    @default(0)
+  firstOrder String   @default("")
+  lastOrder  String   @default("")
+  status     String   @default("active") // "active" | "inactive"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([name])
+  @@index([status])
+  @@map("customers")
+}
+
+model SiteConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("site_configs")
+}
+
+model Inquiry {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String   @default("")
+  subject   String
+  message   String   @db.Text
+  status    String   @default("new") // "new" | "read" | "replied" | "closed"
+  repliedAt String?
+  createdAt DateTime @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("inquiries")
+}
+
+model Category {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  slug         String   @unique
+  description  String   @default("") @db.Text
+  parent       String?
+  image        String   @default("")
+  active       Boolean  @default(true)
+  productCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([slug])
+  @@index([active])
+  @@map("categories")
+}

@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { connectDb, ProductModel } from "@/lib/db/models";
-import { products as staticProducts, byFabric, type Fabric } from "@/lib/products";
+import { prisma } from "@/lib/db/prisma";
+import { formatProduct } from "@/lib/db/formatters";
+import { products as staticProducts, type Fabric } from "@/lib/products";
 
 /**
  * GET /api/shop/products
- * Returns merged product list: static catalogue + MongoDB products.
- * DB products override static ones with the same slug.
+ * Returns merged product list: static catalogue + MySQL products.
+ * MySQL products override static ones with the same slug.
  * Supports ?fabric=, ?status=, ?sort=, ?q= query params.
  */
 export async function GET(req: Request) {
@@ -16,46 +17,27 @@ export async function GET(req: Request) {
     const sort = searchParams.get("sort") || "newest";
     const query = searchParams.get("q") || "";
 
-    // Fetch DB products
-    await connectDb();
-    const dbQuery: Record<string, unknown> = {};
+    // Fetch MySQL products
+    const where: Record<string, unknown> = {};
     if (statusFilter !== "all") {
-      dbQuery["_status"] = statusFilter;
+      where["status"] = statusFilter;
     }
-    const docs = await ProductModel.find(dbQuery).sort({ createdAt: -1 }).lean();
 
-    const dbProducts = docs.map((d: any) => ({
-      id: String(d._id),
-      slug: d.slug,
-      name: d.name,
-      fabric: d.fabric,
-      fabricLabel: d.fabricLabel,
-      colorName: d.colorName,
-      colorSlug: d.colorSlug,
-      swatch: d.swatch,
-      mrp: d.mrp,
-      price: d.price,
-      images: d.images,
-      sizes: d.sizes,
-      summary: d.summary,
-      details: d.details,
-      care: d.care,
-      fit: d.fit,
-      modelNote: d.modelNote,
-      newArrival: d.newArrival,
-      bestSeller: d.bestSeller,
-      popularity: d.popularity,
-      addedOn: d.addedOn,
-      _stock: d._stock ?? 0,
-      _status: d._status ?? "active",
-    }));
+    const docs = await prisma.product.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+    });
+
+    const dbProducts = docs
+      .map(formatProduct)
+      .filter((p): p is NonNullable<typeof p> => p !== null);
 
     // Merge: static products are the base; DB products override by slug
-    const staticMap = new Map(staticProducts.map((p) => [p.slug, p]));
-    const dbMap = new Map(dbProducts.map((p) => [p.slug, p]));
+    const staticMap = new Map<string, any>(staticProducts.map((p) => [p.slug, p]));
+    const dbMap = new Map<string, any>(dbProducts.map((p) => [p.slug, p]));
 
     // Start with all static products, then override/add DB products
-    const merged = new Map(staticMap);
+    const merged = new Map<string, any>(staticMap);
     for (const [slug, dbP] of dbMap) {
       merged.set(slug, dbP);
     }

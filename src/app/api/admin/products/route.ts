@@ -1,39 +1,17 @@
 import { NextResponse } from "next/server";
-import { connectDb, ProductModel } from "@/lib/db/models";
+import { prisma } from "@/lib/db/prisma";
+import { formatProduct } from "@/lib/db/formatters";
 import { requireAdminAuth } from "@/lib/admin/auth-middleware";
 
-export async function GET(req: Request) {
+export async function GET() {
   const authError = await requireAdminAuth();
   if (authError) return authError;
   try {
-    await connectDb();
-    const docs = await ProductModel.find().sort({ createdAt: -1 }).lean();
+    const docs = await prisma.product.findMany({
+      orderBy: { createdAt: "desc" },
+    });
     return NextResponse.json({
-      products: docs.map((d: any) => ({
-        id: String(d._id),
-        slug: d.slug,
-        name: d.name,
-        fabric: d.fabric,
-        fabricLabel: d.fabricLabel,
-        colorName: d.colorName,
-        colorSlug: d.colorSlug,
-        swatch: d.swatch,
-        mrp: d.mrp,
-        price: d.price,
-        images: d.images,
-        sizes: d.sizes,
-        summary: d.summary,
-        details: d.details,
-        care: d.care,
-        fit: d.fit,
-        modelNote: d.modelNote,
-        newArrival: d.newArrival,
-        bestSeller: d.bestSeller,
-        popularity: d.popularity,
-        addedOn: d.addedOn,
-        _stock: d._stock ?? 0,
-        _status: d._status ?? "draft",
-      })),
+      products: docs.map(formatProduct),
     });
   } catch (error) {
     console.error("[admin/products] GET error:", error);
@@ -46,20 +24,45 @@ export async function POST(req: Request) {
   if (authError) return authError;
   try {
     const body = await req.json();
-    await connectDb();
 
-    // Generate slug from name if not provided — the schema requires a unique slug
-    if (!body.slug && body.name) {
-      body.slug = body.name
-        .toLowerCase()
+    const slug =
+      body.slug?.trim() ||
+      body.name
+        ?.toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
-    }
 
-    const doc = await ProductModel.create(body);
-    const product = doc.toObject();
+    const doc = await prisma.product.create({
+      data: {
+        slug,
+        name: body.name,
+        fabric: body.fabric,
+        fabricLabel: body.fabricLabel,
+        colorName: body.colorName,
+        colorSlug: body.colorSlug,
+        swatch: body.swatch,
+        mrp: Number(body.mrp),
+        price: Number(body.price),
+        images: Array.isArray(body.images) ? body.images : [],
+        sizes: Array.isArray(body.sizes) ? body.sizes : ["S", "M", "L", "XL", "2XL", "3XL"],
+        summary: body.summary ?? "",
+        details: Array.isArray(body.details) ? body.details : [],
+        care: Array.isArray(body.care) ? body.care : [],
+        fit: body.fit ?? "",
+        modelNote: body.modelNote ?? "",
+        newArrival: Boolean(body.newArrival),
+        bestSeller: Boolean(body.bestSeller),
+        popularity: Number(body.popularity ?? 0),
+        addedOn: body.addedOn ?? "",
+        stock: Number(body._stock ?? body.stock ?? 0),
+        status: body._status ?? body.status ?? "draft",
+      },
+    });
+
+    const formatted = formatProduct(doc);
     return NextResponse.json({
-      products: [product],
+      products: [formatted],
+      product: formatted,
     }, { status: 201 });
   } catch (error) {
     console.error("[admin/products] POST error:", error);

@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
-import { connectDb, OrderModel, CustomerModel } from "@/lib/db/models";
+import { prisma } from "@/lib/db/prisma";
 import { requireAdminAuth } from "@/lib/admin/auth-middleware";
 
 export async function GET() {
   const authError = await requireAdminAuth();
   if (authError) return authError;
   try {
-    await connectDb();
-    const activeOrders = await OrderModel.find({
-      status: { $nin: ["cancelled", "returned"] },
-    }).lean();
-    const totalRevenue = (activeOrders as any[]).reduce((s: number, o: any) => s + o.total, 0);
-    const uniqueEmails = new Set((activeOrders as any[]).map((o: any) => o.email));
+    const activeOrders = await prisma.order.findMany({
+      where: {
+        status: { notIn: ["cancelled", "returned"] },
+      },
+    });
+
+    const totalRevenue = activeOrders.reduce((s, o) => s + Number(o.total), 0);
+    const uniqueEmails = new Set(activeOrders.map((o) => o.email));
+
     return NextResponse.json({
       totalRevenue,
       totalOrders: activeOrders.length,

@@ -355,7 +355,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         <div className="flex gap-4 text-[12px] tracking-[0.12em] uppercase">
           <Link href="/account" onClick={onNavigate}>Account</Link>
           <Link href="/wishlist" onClick={onNavigate}>Wishlist</Link>
-          <Link href="/track-order" onClick={onNavigate}>Track Order</Link>
+
         </div>
       </div>
     </div>

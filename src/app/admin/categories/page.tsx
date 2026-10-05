@@ -118,32 +118,27 @@ function CategoryModal({
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-medium">Category Image</Label>
-            <div
-              className={`relative rounded-xl border-2 border-dashed p-5 text-center cursor-pointer transition-all hover:border-primary/40 hover:bg-muted/20 ${form.image ? "border-solid" : ""}`}
-              onClick={() => inputRef.current?.click()}
-            >
-              <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); if (inputRef.current) inputRef.current.value = ""; }} />
-              {uploading ? (
-                <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="h-6 w-6 text-primary animate-spin" />
-                  <p className="text-sm text-muted-foreground">Uploading…</p>
-                </div>
-              ) : form.image ? (
-                <div className="relative inline-block">
-                  <img src={form.image} alt="" className="h-24 w-24 object-cover rounded-lg" />
-                  <button type="button" onClick={(e) => { e.stopPropagation(); setForm({ ...form, image: "" }); }} className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full p-1 hover:scale-110 transition-transform shadow-sm">
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="h-10 w-10 rounded-full bg-muted/60 flex items-center justify-center">
-                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm font-medium text-muted-foreground">Click to upload an image</p>
-                </div>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Paste image URL (e.g. /assets/... or web URL)"
+                value={form.image ?? ""}
+                onChange={(e) => setForm({ ...form, image: e.target.value })}
+                className="h-9 text-sm"
+              />
+              {form.image && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, image: "" })}>
+                  Clear
+                </Button>
               )}
             </div>
+            <p className="text-xs text-muted-foreground">
+              Direct runtime file upload is disabled for MVP until Hostinger persistent media storage is configured. Provide an image URL.
+            </p>
+            {form.image && (
+              <div className="relative inline-block mt-1">
+                <img src={form.image} alt="" className="h-20 w-20 object-cover rounded-lg border border-border/60" />
+              </div>
+            )}
           </div>
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div>

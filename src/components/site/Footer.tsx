@@ -18,7 +18,7 @@ const care = [
   { label: "Size Guide", to: "/size-guide" },
   { label: "Shipping and Delivery", to: "/policies/shipping" },
   { label: "Returns and Exchanges", to: "/policies/returns" },
-  { label: "Track Order", to: "/track-order" },
+
 ] as const;
 
 const about = [

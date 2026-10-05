@@ -1,43 +1,34 @@
 import { NextResponse } from "next/server";
-import { connectDb, CategoryModel, ProductModel } from "@/lib/db/models";
+import { prisma } from "@/lib/db/prisma";
+import { formatCategory } from "@/lib/db/formatters";
 import { requireAdminAuth } from "@/lib/admin/auth-middleware";
 
 export async function GET() {
   const authError = await requireAdminAuth();
   if (authError) return authError;
   try {
-    await connectDb();
-    const categories = await CategoryModel.find().sort({ name: 1 }).lean();
-    const counts = await ProductModel.aggregate([
-      { $group: { _id: "$fabric", count: { $sum: 1 } } },
-    ]);
+    const categories = await prisma.category.findMany({
+      orderBy: { name: "asc" },
+    });
+
+    const productCounts = await prisma.product.groupBy({
+      by: ["fabric"],
+      _count: { id: true },
+    });
+
     const countMap: Record<string, number> = {};
-    counts.forEach((p: any) => { countMap[p._id] = p.count; });
+    productCounts.forEach((p) => {
+      countMap[p.fabric] = p._count.id;
+    });
 
     return NextResponse.json({
-      categories: categories.map((c: any) => {
-        const nameLower = c.name.toLowerCase();
-        const fabricMap: Record<string, string[]> = {
-          "pure-linen": ["pure linen", "pure-linen"],
-          "linen-blend": ["linen blend", "linen-blend"],
-        };
-        let productCount = c.productCount ?? 0;
-        if (productCount === 0) {
-          for (const [fabric, keywords] of Object.entries(fabricMap)) {
-            if (keywords.some(kw => nameLower.includes(kw))) {
-              productCount = countMap[fabric] ?? 0;
-              break;
-            }
-          }
+      categories: categories.map((c) => {
+        let productCount = c.productCount;
+        if (productCount === 0 && countMap[c.slug]) {
+          productCount = countMap[c.slug] ?? 0;
         }
         return {
-          id: String(c._id),
-          name: c.name,
-          slug: c.slug,
-          description: c.description || "",
-          parent: c.parent || null,
-          image: c.image || "",
-          active: c.active ?? true,
+          ...formatCategory(c),
           productCount,
         };
       }),
@@ -53,9 +44,25 @@ export async function POST(req: Request) {
   if (authError) return authError;
   try {
     const body = await req.json();
-    await connectDb();
-    const doc = await CategoryModel.create(body);
-    return NextResponse.json({ category: doc.toObject() }, { status: 201 });
+    const slug =
+      body.slug?.trim() ||
+      body.name
+        ?.toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+
+    const doc = await prisma.category.create({
+      data: {
+        name: body.name,
+        slug,
+        description: body.description ?? "",
+        parent: body.parent ?? null,
+        image: body.image ?? "",
+        active: body.active ?? true,
+      },
+    });
+
+    return NextResponse.json({ category: formatCategory(doc) }, { status: 201 });
   } catch (error) {
     console.error("[admin/categories] POST error:", error);
     return NextResponse.json({ error: "Failed to create category" }, { status: 500 });
