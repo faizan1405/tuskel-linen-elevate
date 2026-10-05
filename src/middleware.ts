@@ -2,10 +2,27 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyAdminSessionToken } from "@/lib/admin/session";
 
-const ADMIN_PATHS = ["/admin", "/admin/products", "/admin/categories", "/admin/orders", "/admin/customers", "/admin/inquiries", "/admin/inventory", "/admin/settings"];
+const REMOVED_ADMIN_PATHS = [
+  "/admin/customers",
+  "/admin/inquiries",
+  "/admin/inventory",
+  "/admin/settings",
+];
+
+const ADMIN_PATHS = [
+  "/admin",
+  "/admin/products",
+  "/admin/categories",
+  "/admin/orders",
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Immediately redirect removed admin routes to /admin
+  if (REMOVED_ADMIN_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+    return NextResponse.redirect(new URL("/admin", request.url));
+  }
 
   // Allow the login page at /admin through without auth check
   if (pathname === "/admin") {

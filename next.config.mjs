@@ -9,6 +9,30 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/admin/customers/:path*',
+        destination: '/admin',
+        permanent: false,
+      },
+      {
+        source: '/admin/inquiries/:path*',
+        destination: '/admin',
+        permanent: false,
+      },
+      {
+        source: '/admin/inventory/:path*',
+        destination: '/admin',
+        permanent: false,
+      },
+      {
+        source: '/admin/settings/:path*',
+        destination: '/admin',
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

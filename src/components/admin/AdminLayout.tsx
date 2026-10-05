@@ -7,10 +7,7 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
-  Users,
-  Inbox,
   FolderTree,
-  Settings,
   PanelLeft,
   Menu,
   X,
@@ -35,10 +32,6 @@ const navItems = [
   { title: "Products", href: "/admin/products", icon: Package },
   { title: "Categories", href: "/admin/categories", icon: FolderTree },
   { title: "Orders", href: "/admin/orders", icon: ShoppingCart },
-  { title: "Customers", href: "/admin/customers", icon: Users },
-  { title: "Inquiries", href: "/admin/inquiries", icon: Inbox },
-  { title: "Inventory", href: "/admin/inventory", icon: Package },
-  { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 function SidebarNav() {

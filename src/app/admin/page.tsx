@@ -23,7 +23,7 @@ import {
 } from "@/lib/admin/hooks";
 import { ORDER_STATUSES } from "@/lib/admin/types";
 import { formatDateShort } from "@/lib/admin/format";
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, ArrowRight, Plus, Package, UserPlus } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, ArrowRight, Plus, Package, FolderTree } from "lucide-react";
 import Link from "next/link";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -236,15 +236,15 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </Link>
-        <Link href="/admin/customers" className="group">
+        <Link href="/admin/categories" className="group">
           <Card className="border-border/60 hover:shadow-md transition-all duration-200 hover:border-primary/20">
             <CardContent className="p-5 flex items-center gap-4">
               <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                <UserPlus className="h-4 w-4 text-emerald-600 group-hover:text-white" />
+                <FolderTree className="h-4 w-4 text-emerald-600 group-hover:text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold">Customers</p>
-                <p className="text-xs text-muted-foreground">{s.totalCustomers} registered</p>
+                <p className="text-sm font-semibold">Categories</p>
+                <p className="text-xs text-muted-foreground">Manage categories</p>
               </div>
             </CardContent>
           </Card>

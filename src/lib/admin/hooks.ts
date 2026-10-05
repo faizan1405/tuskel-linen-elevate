@@ -169,53 +169,6 @@ export function useAdminUpdateOrder() {
   });
 }
 
-// ─── Customers ────────────────────────────────────────────────────────────────
-
-export function useAdminCustomers() {
-  return useQuery({
-    queryKey: ["admin", "customers"],
-    queryFn: () => api("/api/admin/customers").then((r) => r.customers ?? []),
-  });
-}
-
-// ─── Inquiries ────────────────────────────────────────────────────────────────
-
-export function useAdminInquiries() {
-  return useQuery({
-    queryKey: ["admin", "inquiries"],
-    queryFn: () => api("/api/admin/inquiries").then((r) => r.inquiries ?? []),
-  });
-}
-
-export function useAdminUpdateInquiry() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-      api(`/api/admin/inquiries/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin", "inquiries"] });
-      toast.success("Inquiry updated");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-}
-
-export function useAdminDeleteInquiry() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) =>
-      api(`/api/admin/inquiries/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin", "inquiries"] });
-      toast.success("Inquiry deleted");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-}
-
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export function useAdminStats() {
@@ -254,30 +207,5 @@ export function useAdminTopProducts(limit = 5) {
         .slice(0, limit)
         .map((p: any) => ({ name: p.name, revenue: 0, units: 0, image: p.images?.[0], slug: p.slug }));
     }),
-  });
-}
-
-// ─── Site config ──────────────────────────────────────────────────────────────
-
-export function useAdminSiteConfig() {
-  return useQuery({
-    queryKey: ["admin", "site-config"],
-    queryFn: () => api("/api/admin/site-config").then((r) => r.config ?? {}),
-  });
-}
-
-export function useAdminSaveSiteConfig() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (value: Record<string, unknown>) =>
-      api("/api/admin/site-config", {
-        method: "POST",
-        body: JSON.stringify({ value }),
-      }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin", "site-config"] });
-      toast.success("Settings saved");
-    },
-    onError: (e: Error) => toast.error(e.message),
   });
 }
