@@ -1,13 +1,15 @@
 "use client";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
+import { useStore } from "@/lib/store";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
-import { ArrowLeft, LogOut, User, Mail } from "lucide-react";
+import { ArrowLeft, LogOut, User, Mail, ChevronRight, Heart, Package, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GoogleSignInButton } from "@/components/site/GoogleSignInButton";
 
-export default function Page() {
+export default function AccountPage() {
   const { user, signOut, hydrated } = useAuth();
+  const { wishlist } = useStore();
 
   if (!hydrated) {
     return (
@@ -47,7 +49,8 @@ export default function Page() {
       <h1 className="mt-4 font-display text-4xl font-light md:text-5xl">My Account</h1>
 
       <div className="mt-10 max-w-lg">
-        <div className="flex items-center gap-4 border border-border p-5">
+        {/* Profile Card */}
+        <div className="flex items-center gap-4 border border-border p-5 bg-background">
           {user.picture ? (
             <img
               src={user.picture}
@@ -63,37 +66,58 @@ export default function Page() {
           <div className="flex-1 min-w-0">
             <p className="text-[15px] font-medium truncate">{user.name}</p>
             <div className="mt-1 flex items-center gap-1.5 text-[13px] text-muted-foreground">
-              <Mail className="h-3.5 w-3.5" />
+              <Mail className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">{user.email}</span>
             </div>
           </div>
         </div>
 
+        {/* Account Actions */}
         <div className="mt-6 space-y-3">
           <p className="eyebrow">Account Actions</p>
-          <ul className="divide-y divide-border border border-border">
+          <ul className="divide-y divide-border border border-border bg-background">
             <li>
-              <Link href="/wishlist"
-                className="block px-5 py-4 text-[13px] hover:bg-secondary transition-colors"
+              <Link
+                href="/wishlist"
+                className="flex items-center justify-between px-5 py-4 text-[13px] hover:bg-secondary/60 transition-colors group"
               >
-                My Wishlist
+                <div className="flex items-center gap-3">
+                  <Heart className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  <span>My Wishlist</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {wishlist.length > 0 && (
+                    <span className="text-[11px] text-muted-foreground">
+                      {wishlist.length} item{wishlist.length === 1 ? "" : "s"}
+                    </span>
+                  )}
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </div>
               </Link>
             </li>
             <li>
-              <a
-                href="/orders"
-                className="block px-5 py-4 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+              <Link
+                href="/account/orders"
+                className="flex items-center justify-between px-5 py-4 text-[13px] hover:bg-secondary/60 transition-colors group"
               >
-                Order History <span className="text-[11px]">(coming soon)</span>
-              </a>
+                <div className="flex items-center gap-3">
+                  <Package className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  <span>Order History</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              </Link>
             </li>
             <li>
-              <a
-                href="/addresses"
-                className="block px-5 py-4 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+              <Link
+                href="/account/addresses"
+                className="flex items-center justify-between px-5 py-4 text-[13px] hover:bg-secondary/60 transition-colors group"
               >
-                Saved Addresses <span className="text-[11px]">(coming soon)</span>
-              </a>
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  <span>Saved Addresses</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              </Link>
             </li>
           </ul>
 

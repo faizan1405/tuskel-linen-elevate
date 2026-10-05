@@ -1,7 +1,6 @@
 "use client";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import { verifyGoogleToken } from "@/lib/google-auth.server";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { CLIENT_ENV } from "@/lib/env";
@@ -37,14 +36,17 @@ export function GoogleSignInButton() {
               return;
             }
             try {
-              const profile = await verifyGoogleToken({
-                data: { token },
+              const res = await fetch("/api/account/auth/google", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token }),
               });
-              const profileWithPicture = profile.picture
-                ? { name: profile.name, email: profile.email, picture: profile.picture }
-                : { name: profile.name, email: profile.email };
-              signInWithGoogle(profileWithPicture);
-              toast.success(`Signed in as ${profile.name}`);
+              const data = await res.json();
+              if (!res.ok || !data.ok) {
+                throw new Error(data.error || "Authentication failed");
+              }
+              signInWithGoogle(data.user);
+              toast.success(`Signed in as ${data.user.name}`);
             } catch (err) {
               toast.error("Sign-In failed", {
                 description: err instanceof Error ? err.message : "Token verification failed.",

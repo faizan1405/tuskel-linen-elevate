@@ -71,3 +71,4 @@ dist-ssr
 .vercel
 .env*
 .next
+*.tsbuildinfo

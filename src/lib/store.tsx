@@ -50,6 +50,7 @@ interface StoreValue {
   shipping: number;
   total: number;
   lines: Array<CartLine & { product: Product }>;
+  getProduct: (slug: string) => Product | undefined;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -112,12 +113,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
-  // Hydrate any cart items that are neither in static catalogue nor catalog yet
+  // Hydrate any cart or wishlist items that are neither in static catalogue nor catalog yet
   useEffect(() => {
-    if (!hydrated || cart.length === 0) return;
-    const missingSlugs = cart
-      .map((l) => l.slug)
-      .filter((slug) => !catalog.has(slug));
+    if (!hydrated || (cart.length === 0 && wishlist.length === 0)) return;
+    const allSlugs = Array.from(new Set([...cart.map((l) => l.slug), ...wishlist]));
+    const missingSlugs = allSlugs.filter((slug) => !catalog.has(slug));
 
     if (missingSlugs.length === 0) return;
 
@@ -135,7 +135,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         })
         .catch(() => {});
     });
-  }, [cart, catalog, hydrated]);
+  }, [cart, wishlist, catalog, hydrated]);
 
   useEffect(() => {
     if (hydrated) window.localStorage.setItem("tuskel.cart", JSON.stringify(cart));
@@ -280,6 +280,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       shipping,
       total,
       lines,
+      getProduct: (slug: string) => catalog.get(slug) || staticProducts.find((p) => p.slug === slug),
     };
   }, [cart, wishlist, recentlyViewed, cartOpen, coupon, hydrated, catalog]);
 

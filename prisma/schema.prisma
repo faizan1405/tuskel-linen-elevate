@@ -88,21 +88,47 @@ model OrderItem {
 }
 
 model Customer {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   name       String
-  email      String   @unique
+  email      String    @unique
   phone      String
-  orders     Int      @default(0)
-  spent      Float    @default(0)
-  firstOrder String   @default("")
-  lastOrder  String   @default("")
-  status     String   @default("active") // "active" | "inactive"
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  orders     Int       @default(0)
+  spent      Float     @default(0)
+  firstOrder String    @default("")
+  lastOrder  String    @default("")
+  status     String    @default("active") // "active" | "inactive"
+  googleSub  String?
+  avatarUrl  String?   @db.Text
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  addresses  Address[]
 
   @@index([name])
   @@index([status])
   @@map("customers")
+}
+
+model Address {
+  id           String   @id @default(cuid())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label        String   @default("Home") // "Home" | "Work" | "Other"
+  fullName     String
+  phone        String
+  addressLine1 String
+  addressLine2 String?
+  landmark     String?
+  city         String
+  state        String
+  pincode      String
+  country      String   @default("India")
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([isDefault])
+  @@map("addresses")
 }
 
 model SiteConfig {

@@ -1,13 +1,29 @@
 "use client";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { ShieldCheck, CheckCircle2, AlertCircle, Loader2, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { inr } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const field =
   "min-h-11 w-full border-b border-border bg-transparent px-1 py-2 text-[14px] focus:border-foreground focus:outline-none";
+
+interface SavedAddress {
+  id: string;
+  label: "Home" | "Work" | "Other";
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string | null;
+  landmark?: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  isDefault: boolean;
+}
 
 interface ConfirmedOrder {
   id?: string;
@@ -41,6 +57,12 @@ export default function CheckoutPage() {
   const [shippingMethod, setShippingMethod] = useState<"standard" | "express">("standard");
   const [sameBilling, setSameBilling] = useState(true);
 
+  // Customer authentication and saved addresses
+  const { user, hydrated: authHydrated } = useAuth();
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("custom");
+  const [saveNewAddress, setSaveNewAddress] = useState(false);
+
   // Form field state for controlled submission
   const [formData, setFormData] = useState({
     email: "",
@@ -54,6 +76,51 @@ export default function CheckoutPage() {
 
   const shippingCost = shippingMethod === "express" ? 199 : 0;
   const grandTotal = Math.max(0, subtotal - discount + shippingCost);
+
+  const applySavedAddress = (addr: SavedAddress) => {
+    const fullStreet = [
+      addr.addressLine1,
+      addr.addressLine2,
+      addr.landmark ? `Near ${addr.landmark}` : null,
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    setFormData((prev) => ({
+      ...prev,
+      name: addr.fullName,
+      phone: addr.phone,
+      address: fullStreet || addr.addressLine1,
+      city: addr.city,
+      state: addr.state,
+      pincode: addr.pincode,
+    }));
+    setErrors({});
+  };
+
+  useEffect(() => {
+    if (!authHydrated || !user) return;
+    setFormData((prev) => ({
+      ...prev,
+      email: prev.email || user.email || "",
+      name: prev.name || user.name || "",
+    }));
+
+    fetch("/api/account/addresses")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (Array.isArray(data?.addresses) && data.addresses.length > 0) {
+          setSavedAddresses(data.addresses);
+          const defaultAddr =
+            data.addresses.find((a: SavedAddress) => a.isDefault) || data.addresses[0];
+          if (defaultAddr) {
+            setSelectedAddressId(defaultAddr.id);
+            applySavedAddress(defaultAddr);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [authHydrated, user]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -145,6 +212,23 @@ export default function CheckoutPage() {
       clearCart();
       removeCoupon();
       setConfirmedOrder(data.order);
+      // Save address if explicitly requested by logged-in user
+      if (user && saveNewAddress && selectedAddressId === "custom") {
+        fetch("/api/account/addresses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: formData.name.trim(),
+            phone: formData.phone.trim(),
+            addressLine1: formData.address.trim(),
+            city: formData.city.trim(),
+            state: formData.state.trim(),
+            pincode: formData.pincode.trim(),
+            label: "Home",
+          }),
+        }).catch(() => {});
+      }
+
       setIsSubmitting(false);
       toast.success(`Order ${data.order.orderNo} placed successfully!`);
     } catch (err: any) {
@@ -339,6 +423,85 @@ export default function CheckoutPage() {
           {/* Shipping address */}
           <fieldset>
             <legend className="eyebrow mb-5">Shipping address</legend>
+
+            {/* Saved Address Selector for Logged-In Customers */}
+            {user && savedAddresses.length > 0 && (
+              <div className="mb-8 space-y-3">
+                <p className="text-[11px] font-medium tracking-[0.14em] uppercase text-muted-foreground">
+                  Deliver to a saved address
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {savedAddresses.map((addr) => {
+                    const isSelected = selectedAddressId === addr.id;
+                    return (
+                      <div
+                        key={addr.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          setSelectedAddressId(addr.id);
+                          applySavedAddress(addr);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedAddressId(addr.id);
+                            applySavedAddress(addr);
+                          }
+                        }}
+                        className={cn(
+                          "cursor-pointer border p-4 text-left transition-all select-none",
+                          isSelected
+                            ? "border-foreground bg-secondary/30 ring-1 ring-foreground"
+                            : "border-border hover:border-foreground/50"
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11px] font-medium tracking-[0.12em] uppercase">
+                            {addr.label}
+                          </span>
+                          {addr.isDefault && (
+                            <span className="text-[9px] uppercase tracking-[0.12em] bg-foreground text-primary-foreground px-1.5 py-0.5">
+                              Default
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-2 text-[14px] font-medium truncate">{addr.fullName}</p>
+                        <p className="mt-1 text-[12px] text-muted-foreground line-clamp-2 leading-relaxed">
+                          {addr.addressLine1}
+                          {addr.addressLine2 ? `, ${addr.addressLine2}` : ""}, {addr.city} — {addr.pincode}
+                        </p>
+                        <p className="mt-1.5 text-[11px] text-muted-foreground">
+                          +91 {addr.phone}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedAddressId("custom");
+                    setFormData((prev) => ({
+                      ...prev,
+                      address: "",
+                      city: "",
+                      state: "",
+                      pincode: "",
+                    }));
+                  }}
+                  className={cn(
+                    "mt-2 text-[11px] tracking-[0.14em] uppercase underline underline-offset-4 transition-colors",
+                    selectedAddressId === "custom"
+                      ? "font-semibold text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  + Enter a different delivery address
+                </button>
+              </div>
+            )}
+
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label htmlFor="name" className="text-[12px] text-muted-foreground">
@@ -437,6 +600,18 @@ export default function CheckoutPage() {
                 )}
               </div>
             </div>
+
+            {user && selectedAddressId === "custom" && (
+              <label className="mt-4 flex items-center gap-2.5 text-[13px] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={saveNewAddress}
+                  onChange={(e) => setSaveNewAddress(e.target.checked)}
+                  className="h-3.5 w-3.5 accent-foreground"
+                />
+                <span>Save this shipping address to my account</span>
+              </label>
+            )}
 
             <label className="mt-5 flex items-center gap-2.5 text-[13px]">
               <input
