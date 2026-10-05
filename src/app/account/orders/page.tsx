@@ -235,7 +235,7 @@ export default function AccountOrdersPage() {
                     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] text-muted-foreground">
                       <span>Placed on {order.placedOn}</span>
                       <span>•</span>
-                      <span>{order.paymentMethod}</span>
+                      <span>{order.paymentMethod === "Razorpay" ? "Paid Online" : order.paymentMethod}</span>
                       <span>•</span>
                       <span className="capitalize">{order.paymentStatus}</span>
                     </div>
@@ -345,7 +345,7 @@ export default function AccountOrdersPage() {
                             <span>{inr(order.total)}</span>
                           </div>
                           <p className="text-[11.5px] text-muted-foreground pt-1">
-                            Payment method: {order.paymentMethod} ({order.paymentStatus})
+                            Payment: {order.paymentMethod === "Razorpay" ? "Paid Online" : order.paymentMethod} ({order.paymentStatus})
                           </p>
                         </div>
                       </div>

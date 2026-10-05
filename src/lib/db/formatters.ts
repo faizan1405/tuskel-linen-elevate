@@ -50,6 +50,11 @@ export function formatOrder(o: any) {
     placedOn: o.placedOn,
     updatedOn: o.updatedOn,
     notes: o.notes ?? "",
+    razorpayOrderId: o.razorpayOrderId ?? null,
+    razorpayPaymentId: o.razorpayPaymentId ?? null,
+    paymentProvider: o.paymentProvider ?? null,
+    paidAt: o.paidAt ? (o.paidAt instanceof Date ? o.paidAt.toISOString() : String(o.paidAt)) : null,
+    paymentFailureReason: o.paymentFailureReason ?? null,
     createdAt: o.createdAt,
     updatedAt: o.updatedAt,
     items: Array.isArray(o.items)

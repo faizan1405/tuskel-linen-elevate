@@ -57,6 +57,11 @@ model Order {
   placedOn        String
   updatedOn       String
   notes           String?     @db.Text
+  razorpayOrderId      String?     @unique
+  razorpayPaymentId    String?     @unique
+  paymentProvider      String?     @default("cod")
+  paidAt               DateTime?
+  paymentFailureReason String?     @db.Text
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   items           OrderItem[]

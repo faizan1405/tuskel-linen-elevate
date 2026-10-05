@@ -70,5 +70,6 @@ dist-ssr
 *.sw?
 .vercel
 .env*
+!.env.example
 .next
 *.tsbuildinfo

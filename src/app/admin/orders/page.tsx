@@ -15,7 +15,7 @@ import { useAdminOrders, useAdminUpdateOrder } from "@/lib/admin/hooks";
 import { inr } from "@/lib/format";
 import { formatDateShort, formatDate } from "@/lib/admin/format";
 import { toast } from "sonner";
-import { Search, Eye, ArrowRight, CheckCircle2, Clock, Truck, Package, XCircle, RotateCcw, CheckCheck } from "lucide-react";
+import { Search, Eye, ArrowRight, CheckCircle2, Clock, Truck, Package, XCircle, RotateCcw, CheckCheck, AlertCircle } from "lucide-react";
 
 const STATUS_ALL = "all";
 
@@ -27,6 +27,8 @@ const STATUS_ICONS: Record<string, any> = {
   delivered: CheckCheck,
   cancelled: XCircle,
   returned: RotateCcw,
+  payment_pending: Clock,
+  payment_review: AlertCircle,
 };
 
 const STATUS_COLORS_MAP: Record<string, string> = {
@@ -37,6 +39,8 @@ const STATUS_COLORS_MAP: Record<string, string> = {
   delivered: "bg-emerald-50 text-emerald-700 border-emerald-200/60",
   cancelled: "bg-red-50 text-red-700 border-red-200/60",
   returned: "bg-orange-50 text-orange-700 border-orange-200/60",
+  payment_pending: "bg-amber-50 text-amber-700 border-amber-200/60",
+  payment_review: "bg-rose-50 text-rose-700 border-rose-200/60",
 };
 
 function OrderDetailModal({ order, onClose }: { order: AdminOrder; onClose: () => void }) {
@@ -127,13 +131,29 @@ function OrderDetailModal({ order, onClose }: { order: AdminOrder; onClose: () =
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-0.5">
               <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Customer</p>
-              <p className="text-sm">{order.customer}</p>
+              <p className="text-sm font-medium">{order.customer}</p>
               <p className="text-xs text-muted-foreground">{order.email}</p>
               <p className="text-xs text-muted-foreground">{order.phone}</p>
             </div>
             <div className="space-y-0.5">
               <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Payment</p>
-              <p className="text-sm">{order.paymentMethod}</p>
+              <p className="text-sm font-medium">{order.paymentMethod}</p>
+              <p className="text-xs text-muted-foreground">
+                Status: <span className="capitalize font-medium">{order.paymentStatus || "pending"}</span>
+              </p>
+              {order.razorpayPaymentId && (
+                <p className="text-[11px] font-mono text-muted-foreground truncate" title={order.razorpayPaymentId}>
+                  Pay ID: {order.razorpayPaymentId}
+                </p>
+              )}
+              {order.razorpayOrderId && (
+                <p className="text-[11px] font-mono text-muted-foreground truncate" title={order.razorpayOrderId}>
+                  RP Order: {order.razorpayOrderId}
+                </p>
+              )}
+              {order.paymentFailureReason && (
+                <p className="text-[11px] text-destructive leading-tight">{order.paymentFailureReason}</p>
+              )}
             </div>
           </div>
 
@@ -300,7 +320,10 @@ export default function OrdersPage() {
                     <TableRow key={o.id} className="group hover:bg-muted/20 transition-colors">
                       <TableCell className="pl-5">
                         <span className="font-mono text-xs font-semibold">{o.orderNo}</span>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{o.paymentMethod}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {o.paymentMethod}
+                          {o.paymentStatus ? ` · ${o.paymentStatus}` : ""}
+                        </p>
                       </TableCell>
                       <TableCell>
                         <div>
