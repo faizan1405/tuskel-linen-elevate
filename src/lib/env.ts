@@ -12,8 +12,8 @@ const envSchema = z.object({
  */
 function getEnv() {
   const raw = {
-    DATABASE_URL: process.env["DATABASE_URL"] || "",
-    GOOGLE_CLIENT_SECRET: process.env["GOOGLE_CLIENT_SECRET"] || "",
+    DATABASE_URL: (process.env["DATABASE_URL"] || "").trim().replace(/^["']|["']$/g, ""),
+    GOOGLE_CLIENT_SECRET: (process.env["GOOGLE_CLIENT_SECRET"] || "").trim().replace(/^["']|["']$/g, ""),
   };
 
   const missing = Object.entries(raw)

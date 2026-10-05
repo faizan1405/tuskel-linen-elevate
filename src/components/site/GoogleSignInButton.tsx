@@ -8,7 +8,8 @@ import { CLIENT_ENV } from "@/lib/env";
 
 export function GoogleSignInButton() {
   const { signInWithGoogle } = useAuth();
-  const clientId = CLIENT_ENV.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const rawClientId = CLIENT_ENV.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+  const clientId = rawClientId.trim().replace(/^["']|["']$/g, "");
 
   if (!clientId || clientId === "your-client-id.apps.googleusercontent.com") {
     return (
