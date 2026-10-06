@@ -2,49 +2,118 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
-import { SectionHeading } from "@/components/site/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { site } from "@/lib/site";
 
-export default function ContactPage() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+interface FormState {
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name || !form.email || !form.message) {
-      toast.error("Please fill in your name, email, and message.");
-      return;
-    }
-    setSending(true);
-    try {
-      const res = await fetch("/api/inquiries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          subject: form.subject || "Contact form inquiry",
-          message: form.message,
-        }),
-      });
-      if (res.ok) {
-        setSent(true);
-        setForm({ name: "", email: "", phone: "", subject: "", message: "" });
-        toast.success("Message sent! We&apos;ll get back to you within 24 hours.");
-      } else {
-        toast.error("Failed to send. Please try again or email us directly.");
-      }
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setSending(false);
+interface FormErrors {
+  name?: string;
+  email?: string;
+  phone?: string;
+  message?: string;
+}
+
+export default function ContactPage() {
+  const [form, setForm] = useState<FormState>({
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const handleFieldChange = (field: keyof FormState, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
+
+  const validate = (): FormErrors => {
+    const nextErrors: FormErrors = {};
+
+    if (!form.name.trim()) {
+      nextErrors.name = "Please enter your name.";
+    }
+
+    const emailTrimmed = form.email.trim();
+    if (!emailTrimmed) {
+      nextErrors.email = "Please enter your email address.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
+      nextErrors.email = "Please enter a valid email address.";
+    }
+
+    const phoneTrimmed = form.phone.trim();
+    if (phoneTrimmed) {
+      const digits = phoneTrimmed.replace(/\D/g, "");
+      const validChars = /^[+]?[\d\s\-()]+$/.test(phoneTrimmed);
+      if (!validChars || digits.length < 10 || digits.length > 15) {
+        nextErrors.phone = "Please enter a valid phone number (at least 10 digits).";
+      }
+    }
+
+    if (!form.message.trim()) {
+      nextErrors.message = "Please enter your message.";
+    }
+
+    return nextErrors;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      const firstErrorMessage = Object.values(validationErrors)[0];
+      if (firstErrorMessage) {
+        toast.error(firstErrorMessage);
+      }
+      return;
+    }
+
+    setErrors({});
+
+    const phoneValue = form.phone.trim() || "-";
+    const subjectValue = form.subject.trim() || "-";
+
+    const messageLines = [
+      "Hello Tuskel,",
+      "",
+      "I have an enquiry from your website.",
+      "",
+      `Name: ${form.name.trim()}`,
+      `Email: ${form.email.trim()}`,
+      `Phone: ${phoneValue}`,
+      `Subject: ${subjectValue}`,
+      "",
+      "Message:",
+      form.message.trim(),
+    ];
+
+    const messageText = messageLines.join("\n");
+    // Normalize WhatsApp number to digits only (e.g. 918859538859)
+    const normalizedWhatsApp = (site.whatsapp || site.phoneDisplay).replace(/\D/g, "");
+    const whatsappUrl = `https://wa.me/${normalizedWhatsApp}?text=${encodeURIComponent(messageText)}`;
+
+    const newWindow = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    if (!newWindow) {
+      window.location.href = whatsappUrl;
+    }
+  };
+
+  // Ensure single country code display (+91 88595 38859)
+  const phoneDisplay = site.phoneDisplay.replace(/^\+91\s*\+91/, "+91");
 
   return (
     <div className="shell pb-24">
@@ -62,7 +131,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <p className="font-medium text-foreground">Phone / WhatsApp</p>
-                <a href={`tel:+91${site.phone}`} className="link-underline">+91 {site.phoneDisplay}</a>
+                <a href={`tel:+91${site.phone}`} className="link-underline">{phoneDisplay}</a>
               </div>
               <div>
                 <p className="font-medium text-foreground">Address</p>
@@ -71,37 +140,72 @@ export default function ContactPage() {
             </div>
           </div>
           <div>
-            {sent ? (
-              <div className="rounded-lg border border-border p-8 text-center">
-                <p className="font-display text-2xl font-light">Thank you</p>
-                <p className="mt-3 text-muted-foreground">We&apos;ve received your message and will respond within 24 hours.</p>
-                <Button onClick={() => setSent(false)} className="mt-6">Send another message</Button>
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
+              <div className="space-y-2">
+                <label htmlFor="contact-name" className="text-sm font-medium">Name *</label>
+                <Input
+                  id="contact-name"
+                  autoComplete="name"
+                  value={form.name}
+                  onChange={(e) => handleFieldChange("name", e.target.value)}
+                  aria-invalid={!!errors.name}
+                  className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
+                  placeholder="Your full name"
+                />
+                {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Name *</label>
-                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email *</label>
-                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Phone</label>
-                  <Input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Subject</label>
-                  <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Message *</label>
-                  <Textarea rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} required />
-                </div>
-                <Button type="submit" disabled={sending}>{sending ? "Sending…" : "Send Message"}</Button>
-              </form>
-            )}
+              <div className="space-y-2">
+                <label htmlFor="contact-email" className="text-sm font-medium">Email *</label>
+                <Input
+                  id="contact-email"
+                  type="email"
+                  autoComplete="email"
+                  value={form.email}
+                  onChange={(e) => handleFieldChange("email", e.target.value)}
+                  aria-invalid={!!errors.email}
+                  className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
+                  placeholder="name@example.com"
+                />
+                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="contact-phone" className="text-sm font-medium">Phone</label>
+                <Input
+                  id="contact-phone"
+                  type="tel"
+                  autoComplete="tel"
+                  value={form.phone}
+                  onChange={(e) => handleFieldChange("phone", e.target.value)}
+                  aria-invalid={!!errors.phone}
+                  className={errors.phone ? "border-destructive focus-visible:ring-destructive" : ""}
+                  placeholder="e.g. 9876543210 (optional)"
+                />
+                {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="contact-subject" className="text-sm font-medium">Subject</label>
+                <Input
+                  id="contact-subject"
+                  value={form.subject}
+                  onChange={(e) => handleFieldChange("subject", e.target.value)}
+                  placeholder="What can we help you with?"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="contact-message" className="text-sm font-medium">Message *</label>
+                <Textarea
+                  id="contact-message"
+                  rows={5}
+                  value={form.message}
+                  onChange={(e) => handleFieldChange("message", e.target.value)}
+                  aria-invalid={!!errors.message}
+                  className={errors.message ? "border-destructive focus-visible:ring-destructive" : ""}
+                  placeholder="Tell us about your enquiry..."
+                />
+                {errors.message && <p className="text-xs text-destructive">{errors.message}</p>}
+              </div>
+              <Button type="submit">Send on WhatsApp</Button>
+            </form>
           </div>
         </div>
       </div>
