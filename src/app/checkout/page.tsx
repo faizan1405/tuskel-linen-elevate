@@ -1026,6 +1026,7 @@ export default function CheckoutPage() {
                   src={l.product.images[0]}
                   alt={l.product.name}
                   loading="lazy"
+                  referrerPolicy="no-referrer"
                   className="h-24 w-19 object-cover"
                 />
                 <div className="flex-1 text-[13px]">

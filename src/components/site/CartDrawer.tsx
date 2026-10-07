@@ -42,6 +42,7 @@ export function CartDrawer() {
                       alt={line.product.name}
                       className="h-28 w-22 object-cover"
                       loading="lazy"
+                      referrerPolicy="no-referrer"
                     />
                   </Link>
                   <div className="flex flex-1 flex-col">

@@ -34,7 +34,7 @@ export default function Page() {
             {lines.map((l) => (
               <li key={`${l.slug}-${l.size}`} className="flex gap-4 py-6">
                 <Link href={`/product/${l.slug}`} className="shrink-0">
-                  <img src={l.product.images[0]} alt={l.product.name} loading="lazy" className="h-36 w-28 object-cover" />
+                  <img src={l.product.images[0]} alt={l.product.name} loading="lazy" referrerPolicy="no-referrer" className="h-36 w-28 object-cover" />
                 </Link>
                 <div className="flex flex-1 flex-col">
                   <div className="flex justify-between gap-3">

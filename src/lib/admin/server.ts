@@ -10,10 +10,12 @@ import {
   formatInquiry,
 } from "@/lib/db/formatters";
 import { normalizeImageUrl } from "@/lib/images";
+import { ensureProductSchema } from "@/lib/db/ensure-schema";
 
 // ─── Products ────────────────────────────────────────────────────────────────
 
 export async function adminGetProducts() {
+  await ensureProductSchema();
   const docs = await prisma.product.findMany({
     orderBy: { createdAt: "desc" },
   });
@@ -21,6 +23,7 @@ export async function adminGetProducts() {
 }
 
 export async function adminCreateProduct(data: any) {
+  await ensureProductSchema();
   const parsed = z.object({
     name: z.string().min(1),
     slug: z.string().optional(),
@@ -59,38 +62,62 @@ export async function adminCreateProduct(data: any) {
   const rawSku = parsed.sku !== undefined && parsed.sku !== null ? parsed.sku.trim() : null;
   const sku = rawSku && rawSku.length > 0 ? rawSku : null;
 
-  const doc = await prisma.product.create({
-    data: {
-      slug,
-      sku,
-      name: parsed.name,
-      fabric: parsed.fabric,
-      fabricLabel: parsed.fabricLabel,
-      colorName: parsed.colorName,
-      colorSlug: parsed.colorSlug,
-      swatch: parsed.swatch,
-      mrp: parsed.mrp,
-      price: parsed.price,
-      images: parsed.images.map(normalizeImageUrl),
-      sizes: parsed.sizes,
-      summary: parsed.summary,
-      details: parsed.details,
-      care: parsed.care,
-      fit: parsed.fit,
-      modelNote: parsed.modelNote,
-      newArrival: parsed.newArrival,
-      bestSeller: parsed.bestSeller,
-      popularity: parsed.popularity,
-      addedOn: parsed.addedOn,
-      stock: parsed._stock ?? parsed.stock ?? 0,
-      status: parsed._status ?? parsed.status ?? "draft",
-    },
-  });
+  const productPayload = {
+    slug,
+    sku,
+    name: parsed.name,
+    fabric: parsed.fabric,
+    fabricLabel: parsed.fabricLabel,
+    colorName: parsed.colorName,
+    colorSlug: parsed.colorSlug,
+    swatch: parsed.swatch,
+    mrp: parsed.mrp,
+    price: parsed.price,
+    images: parsed.images.map(normalizeImageUrl),
+    sizes: parsed.sizes,
+    summary: parsed.summary,
+    details: parsed.details,
+    care: parsed.care,
+    fit: parsed.fit,
+    modelNote: parsed.modelNote,
+    newArrival: parsed.newArrival,
+    bestSeller: parsed.bestSeller,
+    popularity: parsed.popularity,
+    addedOn: parsed.addedOn,
+    stock: parsed._stock ?? parsed.stock ?? 0,
+    status: parsed._status ?? parsed.status ?? "draft",
+  };
+
+  let doc;
+  try {
+    doc = await prisma.product.create({
+      data: productPayload,
+    });
+  } catch (createErr: any) {
+    const errMsg = String(createErr?.message || "");
+    if (errMsg.includes("sku") && (errMsg.includes("does not exist") || errMsg.includes("Unknown column"))) {
+      console.warn("[adminCreateProduct] Missing 'sku' column caught on create. Re-ensuring schema...");
+      await ensureProductSchema();
+      try {
+        doc = await prisma.product.create({
+          data: productPayload,
+        });
+      } catch (retryErr) {
+        const { sku: _omitted, ...payloadWithoutSku } = productPayload;
+        doc = await (prisma.product as any).create({
+          data: payloadWithoutSku,
+        });
+      }
+    } else {
+      throw createErr;
+    }
+  }
 
   return formatProduct(doc);
 }
 
 export async function adminUpdateProduct(data: any) {
+  await ensureProductSchema();
   const { slug, data: updateFields } = z.object({
     slug: z.string(),
     data: z.object({
@@ -138,10 +165,33 @@ export async function adminUpdateProduct(data: any) {
     }
   }
 
-  const doc = await prisma.product.update({
-    where: { slug },
-    data: prismaData,
-  });
+  let doc;
+  try {
+    doc = await prisma.product.update({
+      where: { slug },
+      data: prismaData,
+    });
+  } catch (updateErr: any) {
+    const errMsg = String(updateErr?.message || "");
+    if (errMsg.includes("sku") && (errMsg.includes("does not exist") || errMsg.includes("Unknown column"))) {
+      console.warn("[adminUpdateProduct] Missing 'sku' column caught on update. Re-ensuring schema...");
+      await ensureProductSchema();
+      try {
+        doc = await prisma.product.update({
+          where: { slug },
+          data: prismaData,
+        });
+      } catch (retryErr) {
+        const { sku: _omitted, ...cleanWithoutSku } = prismaData;
+        doc = await prisma.product.update({
+          where: { slug },
+          data: cleanWithoutSku,
+        });
+      }
+    } else {
+      throw updateErr;
+    }
+  }
 
   return formatProduct(doc);
 }

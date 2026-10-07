@@ -94,7 +94,7 @@ function TopProductRow({ p, i }: { p: any; i: number }) {
     <div className="flex items-center gap-3 py-2.5">
       <div className="h-10 w-10 rounded-lg border border-border/60 overflow-hidden shrink-0 bg-muted/40">
         {p.image || p.images?.[0] ? (
-          <img src={p.image || p.images![0]} alt={p.name} className="h-full w-full object-cover" />
+          <img src={p.image || p.images![0]} alt={p.name} referrerPolicy="no-referrer" className="h-full w-full object-cover" />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-muted-foreground/40">
             <Package className="h-4 w-4" />

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { formatProduct } from "@/lib/db/formatters";
 import { requireAdminAuth } from "@/lib/admin/auth-middleware";
 import { normalizeImageUrls } from "@/lib/images";
+import { ensureProductSchema } from "@/lib/db/ensure-schema";
 
 const INTERNAL_FIELDS = new Set(["id", "_id", "__v", "createdAt", "updatedAt"]);
 
@@ -10,6 +11,7 @@ export async function PATCH(_req: Request, { params }: { params: Promise<{ slug:
   const authError = await requireAdminAuth();
   if (authError) return authError;
   try {
+    await ensureProductSchema();
     const body = await _req.json();
     const { slug } = await params;
 
@@ -33,10 +35,33 @@ export async function PATCH(_req: Request, { params }: { params: Promise<{ slug:
       }
     }
 
-    const doc = await prisma.product.update({
-      where: { slug },
-      data: clean,
-    });
+    let doc;
+    try {
+      doc = await prisma.product.update({
+        where: { slug },
+        data: clean,
+      });
+    } catch (updateErr: any) {
+      const errMsg = String(updateErr?.message || "");
+      if (errMsg.includes("sku") && (errMsg.includes("does not exist") || errMsg.includes("Unknown column"))) {
+        console.warn("[admin/products/[slug]] Missing 'sku' column caught on update. Re-ensuring schema...");
+        await ensureProductSchema();
+        try {
+          doc = await prisma.product.update({
+            where: { slug },
+            data: clean,
+          });
+        } catch (retryErr) {
+          const { sku: _omitted, ...cleanWithoutSku } = clean;
+          doc = await prisma.product.update({
+            where: { slug },
+            data: cleanWithoutSku,
+          });
+        }
+      } else {
+        throw updateErr;
+      }
+    }
 
     return NextResponse.json({ product: formatProduct(doc) });
   } catch (error: any) {

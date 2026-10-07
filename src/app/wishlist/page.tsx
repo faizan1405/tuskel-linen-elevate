@@ -52,6 +52,7 @@ export default function WishlistPage() {
                     src={image}
                     alt={p.name}
                     loading="lazy"
+                    referrerPolicy="no-referrer"
                     className="h-40 w-32 object-cover bg-secondary"
                   />
                 </Link>

@@ -407,7 +407,7 @@ function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
                   onClick={() => onOpenChange(false)}
                   className="flex items-center gap-4 px-2 py-2.5 hover:bg-secondary"
                 >
-                  <img src={p.images[0]} alt="" className="h-16 w-13 object-cover" loading="lazy" />
+                  <img src={p.images[0]} alt="" className="h-16 w-13 object-cover" loading="lazy" referrerPolicy="no-referrer" />
                   <span className="flex-1 text-[13px]">{p.name}</span>
                   <span className="text-[13px] text-muted-foreground">{inr(p.price)}</span>
                 </Link>

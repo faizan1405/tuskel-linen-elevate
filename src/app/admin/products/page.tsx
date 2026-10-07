@@ -24,10 +24,11 @@ import {
   useAdminUploadImage,
 } from "@/lib/admin/hooks";
 import { inr } from "@/lib/format";
-import { Search, Plus, Pencil, Trash2, Package, ImagePlus, X, Loader2 } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Package, ImagePlus, X, Loader2, ExternalLink, Info } from "lucide-react";
 import type { Fabric } from "@/lib/products";
 import { toast } from "sonner";
-import { normalizeImageUrl } from "@/lib/images";
+import { normalizeImageUrl, isGoogleDriveFolderUrl, extractGoogleDriveFileId } from "@/lib/images";
+import { ProductImage } from "@/components/ui/product-image";
 
 const FABRIC_LABELS: Record<Fabric, string> = { "pure-linen": "Pure Linen", "linen-blend": "Linen Blend" };
 const STATUS_OPTS = ["active", "draft", "archived"] as const;
@@ -39,11 +40,29 @@ function ImageUploader({ images, onChange }: { images: string[]; onChange: (urls
 
   const handleAddUrl = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!urlInput.trim()) return;
-    const normalized = normalizeImageUrl(urlInput.trim());
+    const raw = urlInput.trim();
+    if (!raw) {
+      toast.error("Please enter an image URL or Google Drive link");
+      return;
+    }
+
+    if (isGoogleDriveFolderUrl(raw)) {
+      toast.error("This is a Google Drive folder link. Please open the individual photo inside Google Drive, click Share → Copy link, and paste it here.");
+      return;
+    }
+
+    if (raw.includes("drive.google.com") || raw.includes("docs.google.com")) {
+      const fileId = extractGoogleDriveFileId(raw);
+      if (!fileId) {
+        toast.error("Could not find a valid file ID in the Google Drive link. Please use a file sharing link.");
+        return;
+      }
+    }
+
+    const normalized = normalizeImageUrl(raw);
     onChange([...images, normalized]);
     setUrlInput("");
-    toast.success("Image URL added");
+    toast.success("Image added to gallery");
   };
 
   return (
@@ -51,30 +70,71 @@ function ImageUploader({ images, onChange }: { images: string[]; onChange: (urls
       <Label className="text-sm font-medium">Product Images</Label>
       <div className="flex gap-2">
         <Input
-          placeholder="Paste image URL or Google Drive link"
+          placeholder="Paste image URL or Google Drive share link"
           value={urlInput}
           onChange={(e) => setUrlInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleAddUrl(e);
+            }
+          }}
           className="h-9 text-sm"
         />
         <Button type="button" variant="secondary" onClick={handleAddUrl} className="h-9 text-xs font-medium shrink-0">
           Add URL
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Paste direct image URLs or Google Drive sharing links. Google Drive files must be shared as &ldquo;Anyone with the link&rdquo;.
-      </p>
+
+      <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-2.5 text-xs text-muted-foreground flex gap-2 items-start">
+        <Info className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div className="space-y-0.5">
+          <p className="font-medium text-foreground text-[11px]">How to use Google Drive images:</p>
+          <p className="text-[11px]">
+            1. Open the photo in Google Drive &rarr; Click <strong>Share</strong> &rarr; Set General Access to <strong>&ldquo;Anyone with the link&rdquo; (Viewer)</strong> &rarr; Click <strong>Copy link</strong>.
+          </p>
+          <p className="text-[11px] text-muted-foreground/80">
+            Direct HTTPS image URLs (e.g. Unsplash, Cloudinary, Imgur) are also supported.
+          </p>
+        </div>
+      </div>
+
       {images.length > 0 && (
-        <div className="flex gap-2.5 flex-wrap pt-1">
+        <div className="flex gap-3 flex-wrap pt-1">
           {images.map((url, idx) => (
-            <div key={idx} className="relative group w-16 h-16">
-              <img src={url} alt="" className="w-full h-full object-cover rounded-lg border border-border/60" />
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onChange(images.filter((_, i) => i !== idx)); }}
-                className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:scale-110"
-              >
-                <X className="h-3 w-3" />
-              </button>
+            <div key={idx} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-border shadow-xs bg-muted/20">
+              <ProductImage
+                src={url}
+                alt={`Image ${idx + 1}`}
+                className="w-full h-full object-cover"
+              />
+              {idx === 0 && (
+                <span className="absolute top-1 left-1 bg-black/75 text-[9px] uppercase tracking-wider text-white px-1.5 py-0.5 rounded font-medium z-10">
+                  Cover
+                </span>
+              )}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 z-20">
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Open image in new tab"
+                  className="p-1.5 bg-background/90 text-foreground rounded-full hover:scale-110 transition-transform shadow-xs"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+                <button
+                  type="button"
+                  title="Remove image"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onChange(images.filter((_, i) => i !== idx));
+                  }}
+                  className="p-1.5 bg-destructive text-destructive-foreground rounded-full hover:scale-110 transition-transform shadow-xs"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -513,7 +573,7 @@ export default function ProductsPage() {
                       <div className="flex items-center gap-3.5">
                         <div className="h-11 w-11 rounded-lg border border-border/60 flex items-center justify-center shrink-0 bg-muted/30 overflow-hidden">
                           {p.images?.[0] ? (
-                            <img src={p.images[0]} alt="" className="h-11 w-11 object-cover" />
+                            <ProductImage src={p.images[0]} alt="" className="h-11 w-11 object-cover" />
                           ) : (
                             <Package className="h-4 w-4 text-muted-foreground/40" />
                           )}

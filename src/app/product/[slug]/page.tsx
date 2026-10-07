@@ -13,6 +13,7 @@ import { SIZES, type Size } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { ProductImage } from "@/components/ui/product-image";
 
 // Minimal product type for the page
 interface PageProduct {
@@ -151,12 +152,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 {product.images.map((img: string, i: number) => (
                   <button key={i} type="button" onClick={() => setActive(i)} aria-label={`View image ${i + 1}`}
                     className={cn("aspect-4/5 w-16 shrink-0 overflow-hidden border md:w-full", active === i ? "border-foreground" : "border-transparent")}>
-                    <img src={img} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    <ProductImage src={img} alt="" loading="lazy" className="h-full w-full object-cover" />
                   </button>
                 ))}
               </div>
               <button type="button" onClick={() => setZoom(true)} className="order-1 block aspect-4/5 w-full cursor-zoom-in overflow-hidden bg-secondary md:order-2" aria-label="Open full screen image viewer">
-                <img src={product.images[active] || product.images[0]} alt={`${product.name}, view ${active + 1}`} width={1024} height={1280} className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.06]" />
+                <ProductImage src={product.images[active] || product.images[0]} alt={`${product.name}, view ${active + 1}`} width={1024} height={1280} className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.06]" />
               </button>
             </div>
           </div>
@@ -288,7 +289,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       <Dialog open={zoom} onOpenChange={setZoom}>
         <DialogContent className="max-w-4xl p-0">
           <DialogTitle className="sr-only">{product.name} enlarged</DialogTitle>
-          <img src={product.images[active] || product.images[0]} alt={product.name} className="h-auto w-full object-contain" />
+          <ProductImage src={product.images[active] || product.images[0]} alt={product.name} className="h-auto w-full object-contain" />
         </DialogContent>
       </Dialog>
     </div>

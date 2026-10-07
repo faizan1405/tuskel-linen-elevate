@@ -9,6 +9,7 @@ import { useStore } from "@/lib/store";
 import type { Product } from "@/lib/products";
 import type { Size } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { ProductImage } from "@/components/ui/product-image";
 
 export function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
   const { toggleWishlist, isWishlisted, addToCart, setCartOpen, hydrated } = useStore();
@@ -31,7 +32,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           className="block"
         >
           <div className="relative aspect-4/5 w-full">
-            <img
+            <ProductImage
               src={product.images[0]}
               alt={`${product.name} shown from the front`}
               width={1024}
@@ -39,7 +40,8 @@ export function ProductCard({ product, priority = false }: { product: Product; p
               loading={priority ? "eager" : "lazy"}
               className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 group-hover:opacity-0"
             />
-            <img
+            {product.images[1] && (
+              <ProductImage
               src={product.images[1]}
               alt={`${product.name} styled on model`}
               width={1040}
@@ -47,6 +49,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
               loading="lazy"
               className="absolute inset-0 h-full w-full scale-105 object-cover opacity-0 transition-all duration-700 group-hover:scale-100 group-hover:opacity-100"
             />
+          )}
           </div>
         </Link>
 
