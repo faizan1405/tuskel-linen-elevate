@@ -55,7 +55,7 @@ export default function SizeGuidePage() {
           </div>
           <div className="rounded-lg border border-border p-6">
             <p className="font-display text-lg font-light">Need Help?</p>
-            <p className="mt-4 text-[13px] text-muted-foreground">Unsure about sizing? Reach out to us at <a href="mailto:care@tuskel.com" className="link-underline">care@tuskel.com</a> or <a href="tel:+918859538859" className="link-underline">+91 88595 38859</a> and we will help you find the right fit.</p>
+            <p className="mt-4 text-[13px] text-muted-foreground">Unsure about sizing? Reach out to us at <a href="mailto:tuskelclothingco@gmail.com" className="link-underline">tuskelclothingco@gmail.com</a> or <a href="tel:+918859538859" className="link-underline">+91 88595 38859</a> and we will help you find the right fit.</p>
           </div>
         </div>
       </div>

@@ -60,7 +60,6 @@ export default function RootLayout({
               telephone: `+91${site.phone}`,
               address: {
                 "@type": "PostalAddress",
-                streetAddress: site.address.line1,
                 addressLocality: "Delhi",
                 postalCode: "110053",
                 addressCountry: "IN",

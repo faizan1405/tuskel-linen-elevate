@@ -33,7 +33,7 @@ export default function TrackOrderPage() {
               Order <strong>{orderNo}</strong> is being processed by our fulfillment team. Order tracking will be shared once your order is dispatched. For assistance, please contact our support team.
             </p>
             <p className="mt-3 text-xs text-muted-foreground">
-              For assistance, please contact our support team at <strong>care@tuskel.com</strong>.
+              For assistance, please contact our support team at <strong>tuskelclothingco@gmail.com</strong>.
             </p>
             <Button
               variant="outline"

@@ -24,7 +24,7 @@ const DEFAULT_CONFIG = {
   returnsWindowDays: 7,
   phone: "8859538859",
   whatsapp: "918859538859",
-  email: "care@tuskel.com",
+  email: "tuskelclothingco@gmail.com",
 };
 
 export async function GET() {

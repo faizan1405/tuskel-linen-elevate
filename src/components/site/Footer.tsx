@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { Instagram, Facebook, Twitter, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { site } from "@/lib/site";
 import { Newsletter } from "./Newsletter";
 
@@ -66,28 +67,22 @@ export function Footer() {
                   <a href={`mailto:${site.email}`} className="link-underline">
                     {site.email}
                   </a>
-                  {site.emailIsPlaceholder && (
-                    <span className="block text-[11px] text-muted-foreground/70">
-                      Placeholder — pending confirmation
-                    </span>
-                  )}
                 </li>
                 <li className="leading-relaxed">
-                  {site.address.line1}
-                  <br />
-                  {site.address.line2}
+                  Delhi - 110053
                 </li>
               </ul>
-              <h3 className="eyebrow mt-8 mb-3">Follow</h3>
-              <div className="flex gap-3">
-                <a href="https://instagram.com" aria-label="Tuskel on Instagram" className="p-1">
-                  <Instagram className="h-4 w-4" />
-                </a>
-                <a href="https://facebook.com" aria-label="Tuskel on Facebook" className="p-1">
-                  <Facebook className="h-4 w-4" />
-                </a>
-                <a href="https://twitter.com" aria-label="Tuskel on X" className="p-1">
-                  <Twitter className="h-4 w-4" />
+              <h3 className="eyebrow mt-8 mb-3">WhatsApp</h3>
+              <div>
+                <a
+                  href="https://wa.me/918859538859"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp +91 88595 38859"
+                  className="inline-flex items-center gap-2 text-[13px] text-muted-foreground link-underline hover:text-foreground transition-colors"
+                >
+                  <WhatsAppIcon className="h-4 w-4 shrink-0" />
+                  <span>+91 88595 38859</span>
                 </a>
               </div>
             </div>

@@ -131,11 +131,18 @@ export default function ContactPage() {
               </div>
               <div>
                 <p className="font-medium text-foreground">Phone / WhatsApp</p>
-                <a href={`tel:+91${site.phone}`} className="link-underline">{phoneDisplay}</a>
+                <a
+                  href="https://wa.me/918859538859"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link-underline"
+                >
+                  +91 88595 38859
+                </a>
               </div>
               <div>
                 <p className="font-medium text-foreground">Address</p>
-                <p>{site.address.line1}<br />{site.address.line2}<br />Delhi, India</p>
+                <p>Delhi - 110053</p>
               </div>
             </div>
           </div>

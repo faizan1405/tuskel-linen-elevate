@@ -34,7 +34,7 @@ export default function TermsPage() {
           </div>
           <div>
             <h2 className="font-display text-xl font-light text-foreground">Contact</h2>
-            <p className="mt-2">For questions about these terms, please contact <a href="mailto:care@tuskel.com" className="link-underline">care@tuskel.com</a>.</p>
+            <p className="mt-2">For questions about these terms, please contact <a href="mailto:tuskelclothingco@gmail.com" className="link-underline">tuskelclothingco@gmail.com</a>.</p>
           </div>
         </div>
       </div>

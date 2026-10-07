@@ -26,11 +26,11 @@ export default function PrivacyPage() {
           </div>
           <div>
             <h2 className="font-display text-xl font-light text-foreground">Your Rights</h2>
-            <p className="mt-2">You have the right to access, correct, or delete your personal data. Contact us at <a href="mailto:care@tuskel.com" className="link-underline">care@tuskel.com</a> for any privacy-related requests.</p>
+            <p className="mt-2">You have the right to access, correct, or delete your personal data. Contact us at <a href="mailto:tuskelclothingco@gmail.com" className="link-underline">tuskelclothingco@gmail.com</a> for any privacy-related requests.</p>
           </div>
           <div>
             <h2 className="font-display text-xl font-light text-foreground">Contact</h2>
-            <p className="mt-2">For questions about this policy, please reach out to <a href="mailto:care@tuskel.com" className="link-underline">care@tuskel.com</a>.</p>
+            <p className="mt-2">For questions about this policy, please reach out to <a href="mailto:tuskelclothingco@gmail.com" className="link-underline">tuskelclothingco@gmail.com</a>.</p>
           </div>
         </div>
       </div>

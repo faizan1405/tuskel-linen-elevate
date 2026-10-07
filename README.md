@@ -494,9 +494,9 @@ Contact information:
 
 * Phone: 8859538859
 
-* Address: B-5/108, Yamuna Vihar, Delhi – 110053, India
+* Email: tuskelclothingco@gmail.com
 
-* Use a configurable placeholder for the official email until it is confirmed
+* Address: Delhi - 110053
 
 Also include:
 

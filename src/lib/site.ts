@@ -11,11 +11,12 @@ export const site = {
   phoneDisplay: "+91 88595 38859",
   whatsapp: "918859538859",
   /** editable — awaiting confirmed official address */
-  email: "care@tuskel.com",
-  emailIsPlaceholder: true,
+  email: "tuskelclothingco@gmail.com",
+  emailIsPlaceholder: false,
   address: {
-    line1: "B-5/108, Yamuna Vihar",
-    line2: "Delhi – 110053, India",
+    line1: "Delhi - 110053",
+    line2: "",
+    display: "Delhi - 110053",
   },
   /** editable */
   hours: "Monday to Saturday, 10:00 – 18:00 IST",

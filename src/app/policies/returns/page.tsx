@@ -25,7 +25,7 @@ export default function ReturnsPage() {
           </div>
           <div>
             <h2 className="font-display text-xl font-light text-foreground">How to Initiate a Return</h2>
-            <p className="mt-2">Contact us at <a href="mailto:care@tuskel.com" className="link-underline">care@tuskel.com</a> or <a href="tel:+918859538859" className="link-underline">+91 88595 38859</a> with your order number. We will guide you through the return process and provide a prepaid return label.</p>
+            <p className="mt-2">Contact us at <a href="mailto:tuskelclothingco@gmail.com" className="link-underline">tuskelclothingco@gmail.com</a> or <a href="tel:+918859538859" className="link-underline">+91 88595 38859</a> with your order number. We will guide you through the return process and provide a prepaid return label.</p>
           </div>
           <div>
             <h2 className="font-display text-xl font-light text-foreground">Refunds</h2>

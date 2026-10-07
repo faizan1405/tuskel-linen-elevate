@@ -19,7 +19,6 @@ const NAV = [
   { label: "Pure Linen", to: "/collections/pure-linen" },
   { label: "Linen Blend", to: "/collections/linen-blend" },
   { label: "New Arrivals", to: "/new-arrivals" },
-  { label: "The Linen Story", to: "/linen-story" },
   { label: "Lookbook", to: "/lookbook" },
   { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect, type FormEvent } from "react";
-import { ShieldCheck, CheckCircle2, AlertCircle, Loader2, Truck, CreditCard } from "lucide-react";
+import { ShieldCheck, CheckCircle2, AlertCircle, Loader2, Truck, CreditCard, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
@@ -11,6 +11,68 @@ import { loadRazorpayScript } from "@/lib/payments/load-razorpay";
 
 const field =
   "min-h-11 w-full border-b border-border bg-transparent px-1 py-2 text-[14px] focus:border-foreground focus:outline-none";
+
+const INDIAN_STATES_AND_UTS = [
+  "Andaman and Nicobar Islands",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chandigarh",
+  "Chhattisgarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jammu and Kashmir",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Ladakh",
+  "Lakshadweep",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Puducherry",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+] as const;
+
+function matchIndianState(input: string): string {
+  if (!input) return "";
+  const cleaned = input.trim();
+  const lower = cleaned.toLowerCase();
+
+  const exact = INDIAN_STATES_AND_UTS.find((s) => s.toLowerCase() === lower);
+  if (exact) return exact;
+
+  if (lower === "new delhi" || lower === "nct of delhi" || lower.startsWith("delhi")) {
+    return "Delhi";
+  }
+  if (lower === "orissa") return "Odisha";
+  if (lower === "uttaranchal") return "Uttarakhand";
+  if (lower === "pondicherry") return "Puducherry";
+  if (lower.includes("dadra") || lower.includes("daman")) {
+    return "Dadra and Nagar Haveli and Daman and Diu";
+  }
+  if (lower.includes("andaman")) return "Andaman and Nicobar Islands";
+  if (lower.includes("jammu") || lower.includes("kashmir")) return "Jammu and Kashmir";
+
+  return cleaned;
+}
 
 interface SavedAddress {
   id: string;
@@ -105,13 +167,15 @@ export default function CheckoutPage() {
       .filter(Boolean)
       .join(", ");
 
+    const resolvedState = matchIndianState(addr.state) || addr.state;
+
     setFormData((prev) => ({
       ...prev,
       name: addr.fullName,
       phone: addr.phone,
       address: fullStreet || addr.addressLine1,
       city: addr.city,
-      state: addr.state,
+      state: resolvedState,
       pincode: addr.pincode,
     }));
     setErrors({});
@@ -178,7 +242,7 @@ export default function CheckoutPage() {
       next["city"] = "Enter your city.";
     }
     if (formData.state.trim().length < 2) {
-      next["state"] = "Enter your state.";
+      next["state"] = "Select your state.";
     }
     if (!/^[0-9]{6}$/.test(formData.pincode.trim())) {
       next["pincode"] = "Enter a 6-digit postcode.";
@@ -788,15 +852,42 @@ export default function CheckoutPage() {
                 <label htmlFor="state" className="text-[12px] text-muted-foreground">
                   State *
                 </label>
-                <input
-                  id="state"
-                  name="state"
-                  value={formData.state}
-                  onChange={(e) => handleInputChange("state", e.target.value)}
-                  className={field}
-                  aria-invalid={!!errors["state"]}
-                  required
-                />
+                <div className="relative">
+                  <select
+                    id="state"
+                    name="state"
+                    value={formData.state}
+                    onChange={(e) => handleInputChange("state", e.target.value)}
+                    className={cn(
+                      field,
+                      "cursor-pointer appearance-none bg-transparent pr-8",
+                      !formData.state && "text-muted-foreground"
+                    )}
+                    aria-invalid={!!errors["state"]}
+                    required
+                  >
+                    <option value="" disabled className="bg-background text-muted-foreground">
+                      Select State / UT
+                    </option>
+                    {formData.state &&
+                      !INDIAN_STATES_AND_UTS.includes(
+                        formData.state as (typeof INDIAN_STATES_AND_UTS)[number]
+                      ) && (
+                        <option value={formData.state} className="bg-background text-foreground">
+                          {formData.state}
+                        </option>
+                      )}
+                    {INDIAN_STATES_AND_UTS.map((st) => (
+                      <option key={st} value={st} className="bg-background text-foreground">
+                        {st}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                </div>
                 {errors["state"] && (
                   <p role="alert" className="mt-1 text-[12px] text-destructive">
                     {errors["state"]}
