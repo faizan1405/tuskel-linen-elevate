@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { ShieldCheck } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { site } from "@/lib/site";
@@ -41,7 +42,15 @@ export function Footer() {
       <div className="shell py-16 md:py-20">
         <div className="grid gap-12 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <p className="font-display text-2xl tracking-[0.32em]">TUSKEL</p>
+            <Link href="/" className="inline-block" aria-label="Tuskel home">
+              <Image
+                src="/images/logo.png"
+                alt="Tuskel"
+                width={136}
+                height={37}
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
             <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-muted-foreground">
               Premium linen and linen-blend shirts for warm days and sharp ones.
             </p>

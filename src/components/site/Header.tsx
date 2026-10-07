@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Heart, Menu, Search, ShoppingBag, User, X, ChevronDown } from "lucide-react";
@@ -88,10 +89,17 @@ export function Header() {
 
         <Link
           href="/"
-          className="font-display text-[22px] leading-none tracking-[0.34em] lg:text-[26px]"
+          className="flex items-center"
           aria-label="Tuskel home"
         >
-          TUSKEL
+          <Image
+            src="/images/logo.png"
+            alt="Tuskel"
+            width={130}
+            height={35}
+            priority
+            className="h-7 w-auto object-contain lg:h-8"
+          />
         </Link>
 
         <nav aria-label="Main" className="hidden lg:block">
@@ -255,7 +263,16 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-border px-5 py-4">
-        <span className="font-display text-lg tracking-[0.3em]">TUSKEL</span>
+        <Link href="/" onClick={onNavigate} aria-label="Tuskel home" className="flex items-center">
+          <Image
+            src="/images/logo.png"
+            alt="Tuskel"
+            width={118}
+            height={32}
+            priority
+            className="h-7 w-auto object-contain"
+          />
+        </Link>
       </div>
       <nav aria-label="Mobile" className="flex-1 px-5 py-4">
         <ul className="divide-y divide-border">
