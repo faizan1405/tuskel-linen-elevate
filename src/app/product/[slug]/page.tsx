@@ -49,7 +49,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const { addToCart, setCartOpen, toggleWishlist, isWishlisted, hydrated, markViewed, recentlyViewed } = useStore();
+  const { addToCart, setCartOpen, toggleWishlist, isWishlisted, hydrated, markViewed, recentlyViewed, getProduct } = useStore();
   const [size, setSize] = useState<Size | null>(null);
   const [qty, setQty] = useState(1);
   const [active, setActive] = useState(0);
@@ -125,11 +125,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   const off = discountPercent(product.mrp, product.price);
   const wished = hydrated && isWishlisted(product.slug);
-  const recent = recentlyViewed.filter((s) => s !== product.slug).map((s) => {
-    // Use local static products for related/recent
-    const { products } = require("@/lib/products");
-    return products.find((p: any) => p.slug === s);
-  }).filter(Boolean);
+  const recent = recentlyViewed
+    .filter((s) => s !== product.slug)
+    .map((s) => getProduct(s))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   function add(then?: "checkout") {
     if (!product || !size) { if (!size) setSizeError(true); return; }
@@ -265,9 +264,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           </div>
         </div>
 
-        <section className="pt-24"><SectionHeading eyebrow="Complete the Look" title="Wears well with" className="mb-10" />
-          <RelatedProducts product={product} />
-        </section>
+        <RelatedProducts product={product} />
         {recent.length > 0 && (
           <section className="pt-24"><SectionHeading eyebrow="Recently Viewed" title="Back to what you saw" className="mb-10" />
             <ProductGrid products={recent} />
@@ -297,10 +294,28 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 }
 
 function RelatedProducts({ product }: { product: PageProduct }) {
-  const { products: staticProducts } = require("@/lib/products");
-  const related = staticProducts
-    .filter((p: any) => p.slug !== product.slug && p.fabric === product.fabric)
-    .sort((a: any, b: any) => (b.popularity || 0) - (a.popularity || 0))
-    .slice(0, 4);
-  return <ProductGrid products={related} />;
+  const [related, setRelated] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch(`/api/shop/products?status=active&fabric=${encodeURIComponent(product.fabric)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.products) {
+          const list = data.products
+            .filter((p: any) => p.slug !== product.slug)
+            .slice(0, 4);
+          setRelated(list);
+        }
+      })
+      .catch(() => {});
+  }, [product.slug, product.fabric]);
+
+  if (related.length === 0) return null;
+
+  return (
+    <section className="pt-24">
+      <SectionHeading eyebrow="Complete the Look" title="Wears well with" className="mb-10" />
+      <ProductGrid products={related} />
+    </section>
+  );
 }

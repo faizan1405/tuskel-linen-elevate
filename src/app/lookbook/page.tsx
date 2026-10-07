@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 
 export default function LookbookPage() {
   const looks = [
-    { title: "Office Day", desc: "Crisp linen with tailored trousers.", slug: "classic-white-linen-blend-shirt" },
-    { title: "Smart Casual", desc: "Relaxed layers for the weekend.", slug: "soft-cream-linen-blend-shirt" },
-    { title: "Summer Evening", desc: "Colour that catches the golden hour.", slug: "vanilla-cream-pure-linen-shirt" },
-    { title: "Weekend Travel", desc: "Lightweight and wrinkle-friendly.", slug: "aqua-mist-pure-linen-shirt" },
+    { title: "Office Day", desc: "Crisp linen with tailored trousers.", href: "/collections/linen-blend" },
+    { title: "Smart Casual", desc: "Relaxed layers for the weekend.", href: "/shop" },
+    { title: "Summer Evening", desc: "Colour that catches the golden hour.", href: "/collections/pure-linen" },
+    { title: "Weekend Travel", desc: "Lightweight and wrinkle-friendly.", href: "/new-arrivals" },
   ];
 
   return (
@@ -21,7 +20,7 @@ export default function LookbookPage() {
         </div>
         <div className="mt-16 grid gap-12 md:grid-cols-2">
           {looks.map((look) => (
-            <Link key={look.slug} href={`/product/${look.slug}`} className="group block">
+            <Link key={look.title} href={look.href} className="group block">
               <div className="aspect-[4/5] bg-secondary overflow-hidden">
                 <div className="h-full w-full bg-gradient-to-br from-muted/50 to-secondary flex items-center justify-center">
                   <span className="font-display text-2xl text-muted-foreground/40 group-hover:text-muted-foreground/60 transition-colors">{look.title}</span>

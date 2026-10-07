@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -8,7 +8,6 @@ import { Heart, Menu, Search, ShoppingBag, User, X, ChevronDown } from "lucide-r
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
-import { colours, products } from "@/lib/products";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { inr } from "@/lib/format";
@@ -43,6 +42,32 @@ export function Header() {
   const [loginOpen, setLoginOpen] = useState(false);
   const { cartCount, wishlist, setCartOpen, hydrated } = useStore();
   const { user, hydrated: authHydrated } = useAuth();
+  const [headerProducts, setHeaderProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/shop/products?status=active")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.products) {
+          setHeaderProducts(data.products);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const headerColours = useMemo(() => {
+    const map = new Map<string, { name: string; slug: string; hex: string }>();
+    for (const p of headerProducts) {
+      if (p.colorSlug && !map.has(p.colorSlug)) {
+        map.set(p.colorSlug, {
+          name: p.colorName || p.colorSlug,
+          slug: p.colorSlug,
+          hex: p.swatch || "#ccc",
+        });
+      }
+    }
+    return Array.from(map.values());
+  }, [headerProducts]);
 
   const overHero = pathname === "/";
 
@@ -82,7 +107,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left" className="w-[86vw] max-w-sm overflow-y-auto p-0">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
-              <MobileNav onNavigate={() => setMobileOpen(false)} />
+              <MobileNav colours={headerColours} onNavigate={() => setMobileOpen(false)} />
             </SheetContent>
           </Sheet>
         </div>
@@ -211,42 +236,46 @@ export function Header() {
                   ))}
                 </ul>
               </div>
-              <div className="col-span-4">
-                <p className="eyebrow mb-4">Shop by Colour</p>
-                <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5">
-                  {colours.map((c) => (
-                    <li key={c.slug}>
-                      <Link
-                        href="/shop"
-                        className="group flex items-center gap-2.5 text-[13px]"
-                      >
-                        <span
-                          className="h-3.5 w-3.5 rounded-full border border-border"
-                          style={{ backgroundColor: c.hex }}
-                          aria-hidden="true"
+              {headerColours.length > 0 && (
+                <div className="col-span-4">
+                  <p className="eyebrow mb-4">Shop by Colour</p>
+                  <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+                    {headerColours.map((c) => (
+                      <li key={c.slug}>
+                        <Link
+                          href={`/shop?colour=${encodeURIComponent(c.slug)}`}
+                          className="group flex items-center gap-2.5 text-[13px]"
+                        >
+                          <span
+                            className="h-3.5 w-3.5 rounded-full border border-border"
+                            style={{ backgroundColor: c.hex }}
+                            aria-hidden="true"
+                          />
+                          <span className="link-underline">{c.name}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {headerProducts.length > 0 && (
+                <div className="col-span-5 grid grid-cols-2 gap-5">
+                  {headerProducts.slice(0, 2).map((p) => (
+                    <Link key={p.slug} href={`/product/${p.slug}`} className="group">
+                      <div className="aspect-4/5 overflow-hidden bg-secondary">
+                        <img
+                          src={p.images?.[0] || "/placeholder.jpg"}
+                          alt={p.name}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                         />
-                        <span className="link-underline">{c.name}</span>
-                      </Link>
-                    </li>
+                      </div>
+                      <p className="mt-3 text-[12px] font-medium">{p.name}</p>
+                      <p className="text-[12px] text-muted-foreground">{inr(p.price)}</p>
+                    </Link>
                   ))}
-                </ul>
-              </div>
-              <div className="col-span-5 grid grid-cols-2 gap-5">
-                {products.slice(0, 2).map((p) => (
-                  <Link key={p.slug} href={`/product/${p.slug}`} className="group">
-                    <div className="aspect-4/5 overflow-hidden bg-secondary">
-                      <img
-                        src={p.images[0]}
-                        alt={p.name}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                      />
-                    </div>
-                    <p className="mt-3 text-[12px] font-medium">{p.name}</p>
-                    <p className="text-[12px] text-muted-foreground">{inr(p.price)}</p>
-                  </Link>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -258,7 +287,7 @@ export function Header() {
   );
 }
 
-function MobileNav({ onNavigate }: { onNavigate: () => void }) {
+function MobileNav({ colours, onNavigate }: { colours: { name: string; slug: string; hex: string }[]; onNavigate: () => void }) {
   const [openGroup, setOpenGroup] = useState<string | null>("Shop");
   return (
     <div className="flex h-full flex-col">
@@ -318,46 +347,48 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
               )}
             </AnimatePresence>
           </li>
-          <li>
-            <button
-              type="button"
-              onClick={() => setOpenGroup(openGroup === "Colour" ? null : "Colour")}
-              aria-expanded={openGroup === "Colour"}
-              className="flex w-full items-center justify-between py-3.5 text-left text-[14px]"
-            >
-              Shop by Colour
-              <ChevronDown
-                className={cn("h-4 w-4 transition-transform", openGroup === "Colour" && "rotate-180")}
-              />
-            </button>
-            <AnimatePresence initial={false}>
-              {openGroup === "Colour" && (
-                <motion.ul
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="overflow-hidden pb-2"
-                >
-                  {colours.map((c) => (
-                    <li key={c.slug}>
-                      <Link
-                        href="/shop"
-                        onClick={onNavigate}
-                        className="flex items-center gap-2.5 py-2.5 pl-4 text-[13px] text-muted-foreground"
-                      >
-                        <span
-                          className="h-3 w-3 rounded-full border border-border"
-                          style={{ backgroundColor: c.hex }}
-                        />
-                        {c.name}
-                      </Link>
-                    </li>
-                  ))}
-                </motion.ul>
-              )}
-            </AnimatePresence>
-          </li>
+          {colours.length > 0 && (
+            <li>
+              <button
+                type="button"
+                onClick={() => setOpenGroup(openGroup === "Colour" ? null : "Colour")}
+                aria-expanded={openGroup === "Colour"}
+                className="flex w-full items-center justify-between py-3.5 text-left text-[14px]"
+              >
+                Shop by Colour
+                <ChevronDown
+                  className={cn("h-4 w-4 transition-transform", openGroup === "Colour" && "rotate-180")}
+                />
+              </button>
+              <AnimatePresence initial={false}>
+                {openGroup === "Colour" && (
+                  <motion.ul
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden pb-2"
+                  >
+                    {colours.map((c) => (
+                      <li key={c.slug}>
+                        <Link
+                          href={`/shop?colour=${encodeURIComponent(c.slug)}`}
+                          onClick={onNavigate}
+                          className="flex items-center gap-2.5 py-2.5 pl-4 text-[13px] text-muted-foreground"
+                        >
+                          <span
+                            className="h-3 w-3 rounded-full border border-border"
+                            style={{ backgroundColor: c.hex }}
+                          />
+                          {c.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+            </li>
+          )}
           {NAV.filter((n) => !["Home", "Shop"].includes(n.label)).map((item) => (
             <li key={item.label}>
               <Link href={item.to} onClick={onNavigate} className="block py-3.5 text-[14px]">
@@ -380,15 +411,24 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
 
 function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [query, setQuery] = useState("");
-  const q = query.trim().toLowerCase();
-  const results = q
-    ? products.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.colorName.toLowerCase().includes(q) ||
-          p.fabricLabel.toLowerCase().includes(q),
-      )
-    : [];
+  const [results, setResults] = useState<any[]>([]);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setResults([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      fetch(`/api/shop/products?status=active&q=${encodeURIComponent(q)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          setResults(data?.products || []);
+        })
+        .catch(() => setResults([]));
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -405,12 +445,12 @@ function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
           />
         </div>
         <div className="max-h-[55vh] overflow-y-auto p-3">
-          {q && results.length === 0 && (
+          {query.trim() && results.length === 0 && (
             <p className="px-2 py-8 text-center text-[13px] text-muted-foreground">
               Nothing matched “{query}”. Try a colour such as cream or blue.
             </p>
           )}
-          {!q && (
+          {!query.trim() && (
             <p className="px-2 py-8 text-center text-[13px] text-muted-foreground">
               Start typing to search the collection.
             </p>
@@ -423,7 +463,7 @@ function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
                   onClick={() => onOpenChange(false)}
                   className="flex items-center gap-4 px-2 py-2.5 hover:bg-secondary"
                 >
-                  <img src={p.images[0]} alt="" className="h-16 w-13 object-cover" loading="lazy" referrerPolicy="no-referrer" />
+                  <img src={p.images?.[0] || "/placeholder.jpg"} alt="" className="h-16 w-13 object-cover" loading="lazy" referrerPolicy="no-referrer" />
                   <span className="flex-1 text-[13px]">{p.name}</span>
                   <span className="text-[13px] text-muted-foreground">{inr(p.price)}</span>
                 </Link>

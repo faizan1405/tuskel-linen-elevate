@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { products as staticProducts, type Product } from "./products";
+import type { Product } from "./products";
 import type { Size } from "./site";
 import { useSiteConfig } from "./site-config";
 
@@ -77,13 +77,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [coupon, setCoupon] = useState<string | null>(null);
-  const [catalog, setCatalog] = useState<Map<string, Product>>(() => {
-    const map = new Map<string, Product>();
-    for (const p of staticProducts) {
-      map.set(p.slug, p);
-    }
-    return map;
-  });
+  const [catalog, setCatalog] = useState<Map<string, Product>>(() => new Map<string, Product>());
 
   useEffect(() => {
     setCart(read<CartLine[]>("tuskel.cart", []));
@@ -93,7 +87,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setHydrated(true);
   }, []);
 
-  // Fetch active products from the API to include admin/MySQL created products
+  // Fetch active products from the API (from MySQL)
   useEffect(() => {
     fetch("/api/shop/products?status=active")
       .then((r) => r.json())
@@ -109,11 +103,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch(() => {
-        // Fall back gracefully to static products and snapshots
+        // Fall back gracefully to snapshots
       });
   }, []);
 
-  // Hydrate any cart or wishlist items that are neither in static catalogue nor catalog yet
+  // Hydrate any cart or wishlist items from the API
   useEffect(() => {
     if (!hydrated || (cart.length === 0 && wishlist.length === 0)) return;
     const allSlugs = Array.from(new Set([...cart.map((l) => l.slug), ...wishlist]));
@@ -153,15 +147,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const value = useMemo<StoreValue>(() => {
     const lines = cart
       .map((line) => {
-        // 1. Look in dynamic product catalog
+        // 1. Look in dynamic product catalog (MySQL products)
         let product: Product | undefined = catalog.get(line.slug);
 
-        // 2. Fallback to static products
-        if (!product) {
-          product = staticProducts.find((p) => p.slug === line.slug);
-        }
-
-        // 3. Fallback to snapshot saved on line in localStorage
+        // 2. Fallback to snapshot saved on line in localStorage
         if (!product && line.product && line.product.name) {
           product = {
             id: line.product.id || line.slug,
@@ -241,7 +230,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (productSnapshot && productSnapshot.name) {
           setCatalog((prev) => {
             const next = new Map(prev);
-            const existing = prev.get(slug) || staticProducts.find((p) => p.slug === slug);
+            const existing = prev.get(slug);
             next.set(slug, {
               ...(existing || {}),
               ...productSnapshot,
@@ -280,7 +269,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       shipping,
       total,
       lines,
-      getProduct: (slug: string) => catalog.get(slug) || staticProducts.find((p) => p.slug === slug),
+      getProduct: (slug: string) => catalog.get(slug),
     };
   }, [cart, wishlist, recentlyViewed, cartOpen, coupon, hydrated, catalog]);
 

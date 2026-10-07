@@ -24,7 +24,7 @@ export function HomeHero() {
       >
         <img
           src={hero.src}
-          alt="Man wearing a Tuskel soft turquoise pure linen shirt in a sunlit travertine courtyard"
+          alt="Man wearing a Tuskel linen shirt in a sunlit travertine courtyard"
           width={1600}
           height={1104}
           fetchPriority="high"

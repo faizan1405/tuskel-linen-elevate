@@ -1,12 +1,11 @@
 "use client";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Leaf, Wind, Truck, RotateCcw } from "lucide-react";
 import { Reveal } from "@/components/site/Reveal";
 import { SectionHeading } from "@/components/site/PageHeader";
 import { ProductGrid } from "@/components/site/ProductGrid";
-import { bestSellers, colours } from "@/lib/products";
 import collectionPure from "@/assets/collection-pure-linen.jpg";
 import collectionBlend from "@/assets/collection-linen-blend.jpg";
 import campaign from "@/assets/campaign-summer.jpg";
@@ -55,14 +54,14 @@ export function CollectionCards() {
       line: "Natural breathability. Timeless refinement.",
       image: collectionPure.src,
       to: "/collections/pure-linen" as const,
-      alt: "Man in a vanilla cream pure linen shirt against a limewashed wall",
+      alt: "Man in a pure linen shirt against a limewashed wall",
     },
     {
       title: "Linen Blend",
       line: "Everyday softness with effortless structure.",
       image: collectionBlend.src,
       to: "/collections/linen-blend" as const,
-      alt: "Man in a classic white linen blend shirt seated in a sunlit interior",
+      alt: "Man in a linen blend shirt seated in a sunlit interior",
     },
   ];
 
@@ -98,6 +97,22 @@ export function CollectionCards() {
 }
 
 export function BestSellersSection() {
+  const [products, setProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/shop/products?status=active")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.products) {
+          const filtered = data.products.filter((p: any) => p.bestSeller);
+          setProducts(filtered.length > 0 ? filtered.slice(0, 4) : data.products.slice(0, 4));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  if (products.length === 0) return null;
+
   return (
     <section className="shell py-4 pb-20 md:pb-28">
       <div className="mb-12 flex flex-wrap items-end justify-between gap-4">
@@ -110,7 +125,7 @@ export function BestSellersSection() {
           </Link>
         </Reveal>
       </div>
-      <ProductGrid products={bestSellers().slice(0, 4)} />
+      <ProductGrid products={products} />
     </section>
   );
 }
@@ -182,7 +197,7 @@ export function CampaignSection() {
     <section ref={ref} className="relative h-[80svh] min-h-[480px] overflow-hidden">
       <motion.img
         src={campaign.src}
-        alt="Two men in powder blue and cream linen shirts walking through a sunlit colonnade"
+        alt="Two men in breathable linen shirts walking through a sunlit colonnade"
         style={{ y }}
         loading="lazy"
         className="absolute inset-0 h-[112%] w-full object-cover"
@@ -212,18 +227,43 @@ export function CampaignSection() {
 }
 
 export function ShopByColour() {
+  const [shades, setShades] = useState<{ name: string; slug: string; hex: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/shop/products?status=active")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.products) {
+          const map = new Map<string, { name: string; slug: string; hex: string }>();
+          for (const p of data.products) {
+            if (p.colorSlug && !map.has(p.colorSlug)) {
+              map.set(p.colorSlug, {
+                name: p.colorName || p.colorSlug,
+                slug: p.colorSlug,
+                hex: p.swatch || "#ccc",
+              });
+            }
+          }
+          setShades(Array.from(map.values()));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  if (shades.length === 0) return null;
+
   return (
     <section className="shell py-20 md:py-28">
       <SectionHeading
         eyebrow="Shop by Colour"
         title="Start with the shade"
-        intro="Nine colours across pure linen and linen blend. Pick one and see what it comes in."
+        intro="Explore shirts in your preferred shade across our linen collection."
         className="mb-12"
       />
       <ul className="grid grid-cols-3 gap-x-4 gap-y-8 sm:grid-cols-5 lg:grid-cols-9">
-        {colours.map((c, i) => (
+        {shades.map((c, i) => (
           <Reveal as="li" key={c.slug} delay={Math.min(i, 6) * 0.04}>
-            <Link href="/shop"  className="group block text-center">
+            <Link href={`/shop?colour=${encodeURIComponent(c.slug)}`} className="group block text-center">
               <span
                 className="mx-auto block aspect-square w-full max-w-16 rounded-full border border-border transition-transform duration-500 group-hover:scale-[1.07]"
                 style={{ backgroundColor: c.hex }}
@@ -276,11 +316,11 @@ export function CraftSection() {
 
 export function LookbookTeaser() {
   const looks = [
-    { image: lookOffice.src, alt: "Man in a powder blue linen shirt in a modern office", label: "Work" },
-    { image: lookWeekend.src, alt: "Man in an aqua mist linen shirt on a sunlit street", label: "Weekend" },
-    { image: lookTravel.src, alt: "Man in a vanilla cream linen shirt carrying a travel bag", label: "Travel" },
-    { image: lookEvening.src, alt: "Man in a midnight black linen shirt at dusk", label: "Evening" },
-    { image: lookSmart.src, alt: "Man in a soft cream linen shirt in a sunlit cafe", label: "Celebrations" },
+    { image: lookOffice.src, alt: "Man in a linen shirt in a modern office", label: "Work" },
+    { image: lookWeekend.src, alt: "Man in a linen shirt on a sunlit street", label: "Weekend" },
+    { image: lookTravel.src, alt: "Man in a linen shirt carrying a travel bag", label: "Travel" },
+    { image: lookEvening.src, alt: "Man in a dark linen shirt at dusk", label: "Evening" },
+    { image: lookSmart.src, alt: "Man in a linen shirt in a sunlit cafe", label: "Celebrations" },
   ];
   return (
     <section className="border-t border-border bg-secondary/40">
@@ -325,17 +365,17 @@ export function LookbookTeaser() {
 const reviews = [
   {
     name: "Arjun M.",
-    product: "Classic White Linen Blend Shirt",
+    product: "Pure Linen Shirt",
     quote: "Wore it through a full day of meetings in Chennai and it still looked composed by evening.",
   },
   {
     name: "Ritesh K.",
-    product: "Vanilla Cream Pure Linen Shirt",
-    quote: "The cream is warm rather than yellow. It sits well with both denim and formal trousers.",
+    product: "Linen Blend Shirt",
+    quote: "The fabric sits comfortably with both denim and formal trousers.",
   },
   {
     name: "Sahil D.",
-    product: "Powder Blue Linen Blend Shirt",
+    product: "Pure Linen Shirt",
     quote: "Softer than I expected from linen. The collar holds its shape without feeling stiff.",
   },
 ];
@@ -368,12 +408,12 @@ export function ReviewsSection() {
 
 export function CommunityGallery() {
   const images = [
-    { src: lookWeekend.src, alt: "Aqua mist linen shirt worn on a sunlit street" },
-    { src: lookOffice.src, alt: "Powder blue linen shirt worn at work" },
-    { src: cuff.src, alt: "Cuff detail of a cream linen shirt" },
-    { src: lookTravel.src, alt: "Vanilla cream linen shirt worn while travelling" },
-    { src: lookEvening.src, alt: "Midnight black linen shirt worn at dusk" },
-    { src: lookSmart.src, alt: "Soft cream linen shirt worn in a cafe" },
+    { src: lookWeekend.src, alt: "Linen shirt worn on a sunlit street" },
+    { src: lookOffice.src, alt: "Linen shirt worn at work" },
+    { src: cuff.src, alt: "Cuff detail of a linen shirt" },
+    { src: lookTravel.src, alt: "Linen shirt worn while travelling" },
+    { src: lookEvening.src, alt: "Linen shirt worn at dusk" },
+    { src: lookSmart.src, alt: "Linen shirt worn in a cafe" },
   ];
   return (
     <section className="shell pb-20 md:pb-28">

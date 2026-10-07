@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Minus, Plus, X, ShieldCheck } from "lucide-react";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
@@ -8,7 +8,6 @@ import { ProductGrid } from "@/components/site/ProductGrid";
 import { SectionHeading } from "@/components/site/PageHeader";
 import { useStore } from "@/lib/store";
 import { inr } from "@/lib/format";
-import { bestSellers } from "@/lib/products";
 
 
 
@@ -16,6 +15,21 @@ export default function Page() {
   const { lines, subtotal, discount, total, updateQty, removeLine, applyCoupon, removeCoupon, coupon } = useStore();
   const [code, setCode] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [recommended, setRecommended] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/shop/products?status=active")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.products) {
+          const list = data.products
+            .filter((p: any) => p.bestSeller)
+            .slice(0, 4);
+          setRecommended(list.length > 0 ? list : data.products.slice(0, 4));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="shell pb-24">
@@ -87,7 +101,12 @@ export default function Page() {
         </div>
       )}
 
-      <section className="pt-24"><SectionHeading eyebrow="You may also like" title="Recommended" className="mb-10" /><ProductGrid products={bestSellers().slice(0, 4)} /></section>
+      {recommended.length > 0 && (
+        <section className="pt-24">
+          <SectionHeading eyebrow="You may also like" title="Recommended" className="mb-10" />
+          <ProductGrid products={recommended} />
+        </section>
+      )}
     </div>
   );
 }

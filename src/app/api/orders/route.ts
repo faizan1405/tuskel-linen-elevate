@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { products as staticProducts } from "@/lib/products";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -70,42 +69,9 @@ export async function POST(req: Request) {
       let subtotal = 0;
 
       for (const item of items) {
-        let dbProduct = await tx.product.findUnique({
+        const dbProduct = await tx.product.findUnique({
           where: { slug: item.slug },
         });
-
-        // If not yet in MySQL, check if it's one of the static base products
-        if (!dbProduct) {
-          const staticP = staticProducts.find((p) => p.slug === item.slug);
-          if (staticP) {
-            dbProduct = await tx.product.create({
-              data: {
-                slug: staticP.slug,
-                name: staticP.name,
-                fabric: staticP.fabric,
-                fabricLabel: staticP.fabricLabel,
-                colorName: staticP.colorName,
-                colorSlug: staticP.colorSlug,
-                swatch: staticP.swatch,
-                mrp: staticP.mrp,
-                price: staticP.price,
-                images: staticP.images,
-                sizes: staticP.sizes,
-                summary: staticP.summary,
-                details: staticP.details,
-                care: staticP.care,
-                fit: staticP.fit,
-                modelNote: staticP.modelNote,
-                newArrival: staticP.newArrival,
-                bestSeller: staticP.bestSeller,
-                popularity: staticP.popularity,
-                addedOn: staticP.addedOn,
-                stock: 100,
-                status: "active",
-              },
-            });
-          }
-        }
 
         if (!dbProduct) {
           throw new Error(`Product "${item.slug}" was not found.`);

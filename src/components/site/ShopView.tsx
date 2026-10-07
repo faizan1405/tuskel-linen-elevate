@@ -1,7 +1,8 @@
 "use client";
 import { useMemo, useState, useEffect } from "react";
+import Link from "next/link";
 import { SlidersHorizontal, X } from "lucide-react";
-import { colours, byFabric, newArrivals, bestSellers, type Fabric, type Product } from "@/lib/products";
+import type { Fabric, Product } from "@/lib/products";
 import { SIZES } from "@/lib/site";
 import { ProductGrid, ProductGridSkeleton } from "./ProductGrid";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -21,7 +22,6 @@ export interface ShopViewProps {
   initialColour?: string;
   initialSort?: SortKey;
   showFabricFilter?: boolean;
-  /** If true, fetch products from the API (merges static + DB). If false, use static only. */
   useApi?: boolean;
 }
 
@@ -30,35 +30,18 @@ export function ShopView({
   initialColour,
   initialSort = "newest",
   showFabricFilter = true,
-  useApi = false,
 }: ShopViewProps) {
   const [apiProducts, setApiProducts] = useState<Product[]>([]);
   const [loaded, setLoaded] = useState(false);
   const DEFAULT_MAX = 4000;
 
-  const staticBase = useMemo<Product[]>(() => {
-    if (scope === "new") return newArrivals();
-    if (scope === "all") return [...byFabric("pure-linen"), ...byFabric("linen-blend")];
-    return byFabric(scope);
-  }, [scope]);
-
-  const base = useMemo<Product[]>(() => {
-    if (useApi && apiProducts.length > 0) {
-      if (scope === "new") return apiProducts.filter((p) => p.newArrival);
-      if (scope === "all") return apiProducts;
-      return apiProducts.filter((p) => p.fabric === scope);
-    }
-    return staticBase;
-  }, [useApi, apiProducts, scope, staticBase]);
-
   useEffect(() => {
-    if (!useApi) return;
     setLoaded(false);
     fetch("/api/shop/products?status=active")
       .then(async (r) => {
         if (!r.ok) throw new Error("API error");
         const data = await r.json();
-        return data.products as Product[];
+        return (data.products || []) as Product[];
       })
       .then((products) => {
         setApiProducts(products);
@@ -68,7 +51,27 @@ export function ShopView({
         setApiProducts([]);
         setLoaded(true);
       });
-  }, [useApi]);
+  }, []);
+
+  const base = useMemo<Product[]>(() => {
+    if (scope === "new") return apiProducts.filter((p) => p.newArrival);
+    if (scope === "all") return apiProducts;
+    return apiProducts.filter((p) => p.fabric === scope);
+  }, [apiProducts, scope]);
+
+  const availableColours = useMemo(() => {
+    const map = new Map<string, { name: string; slug: string; hex: string }>();
+    for (const p of apiProducts) {
+      if (p.colorSlug && !map.has(p.colorSlug)) {
+        map.set(p.colorSlug, {
+          name: p.colorName || p.colorSlug,
+          slug: p.colorSlug,
+          hex: p.swatch || "#ccc",
+        });
+      }
+    }
+    return Array.from(map.values());
+  }, [apiProducts]);
 
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>(initialSort);
@@ -86,7 +89,7 @@ export function ShopView({
       if (q && !`${p.name} ${p.colorName} ${p.fabricLabel}`.toLowerCase().includes(q)) return false;
       if (fabrics.length && !fabrics.includes(p.fabric)) return false;
       if (selectedColours.length && !selectedColours.includes(p.colorSlug)) return false;
-      if (sizes.length && !sizes.some((s) => p.sizes.includes(s as never))) return false;
+      if (sizes.length && !sizes.some((s) => p.sizes && p.sizes.includes(s as never))) return false;
       if (p.price > maxPrice) return false;
       return true;
     });
@@ -121,6 +124,7 @@ export function ShopView({
       setSizes={setSizes}
       selectedColours={selectedColours}
       setSelectedColours={setSelectedColours}
+      availableColours={availableColours}
       maxPrice={maxPrice}
       setMaxPrice={setMaxPrice}
       onClear={clearAll}
@@ -128,7 +132,7 @@ export function ShopView({
     />
   );
 
-  if (useApi && !loaded) {
+  if (!loaded) {
     return (
       <div className="grid gap-10 lg:grid-cols-[240px_1fr] lg:gap-14">
         <aside className="hidden lg:block">
@@ -139,6 +143,44 @@ export function ShopView({
             <ProductGridSkeleton count={8} />
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // If there are zero active products for this collection/scope in MySQL
+  if (base.length === 0) {
+    const defaultEmpty = {
+      title: "No products available yet.",
+      subtitle: "Check back soon as we update our catalogue.",
+    };
+    const emptyMessages: Record<string, { title: string; subtitle: string }> = {
+      new: {
+        title: "No new arrivals at the moment.",
+        subtitle: "Please check back soon for our latest additions.",
+      },
+      "pure-linen": {
+        title: "No Pure Linen products available yet.",
+        subtitle: "Check back soon or explore our other collections.",
+      },
+      "linen-blend": {
+        title: "No Linen Blend products available yet.",
+        subtitle: "Check back soon or explore our other collections.",
+      },
+      all: defaultEmpty,
+    };
+
+    const empty = (scope && emptyMessages[scope]) || defaultEmpty;
+
+    return (
+      <div className="border border-dashed border-border px-6 py-20 text-center">
+        <p className="font-display text-2xl">{empty.title}</p>
+        <p className="mt-3 text-[13px] text-muted-foreground">{empty.subtitle}</p>
+        <Link
+          href="/shop"
+          className="mt-6 inline-block min-h-11 border border-border px-6 py-2.5 text-[11px] tracking-[0.18em] uppercase hover:bg-secondary"
+        >
+          View All Shirts
+        </Link>
       </div>
     );
   }
@@ -239,6 +281,7 @@ function FilterPanel(props: {
   setSizes: (v: string[]) => void;
   selectedColours: string[];
   setSelectedColours: (v: string[]) => void;
+  availableColours: { name: string; slug: string; hex: string }[];
   maxPrice: number;
   setMaxPrice: (v: number) => void;
   onClear: () => void;
@@ -263,21 +306,23 @@ function FilterPanel(props: {
         </fieldset>
       )}
 
-      <fieldset>
-        <legend className="eyebrow mb-3">Colour</legend>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-          {colours.map((c) => {
-            const active = props.selectedColours.includes(c.slug);
-            return (
-              <button key={c.slug} type="button" aria-pressed={active} onClick={() => toggle(props.selectedColours, c.slug, props.setSelectedColours)}
-                className={cn("flex min-h-9 items-center gap-2 text-left text-[12px]", active ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
-                <span className={cn("h-3.5 w-3.5 rounded-full border", active ? "border-foreground ring-1 ring-foreground ring-offset-2" : "border-border")} style={{ backgroundColor: c.hex }} />
-                {c.name}
-              </button>
-            );
-          })}
-        </div>
-      </fieldset>
+      {props.availableColours.length > 0 && (
+        <fieldset>
+          <legend className="eyebrow mb-3">Colour</legend>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+            {props.availableColours.map((c) => {
+              const active = props.selectedColours.includes(c.slug);
+              return (
+                <button key={c.slug} type="button" aria-pressed={active} onClick={() => toggle(props.selectedColours, c.slug, props.setSelectedColours)}
+                  className={cn("flex min-h-9 items-center gap-2 text-left text-[12px]", active ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
+                  <span className={cn("h-3.5 w-3.5 rounded-full border", active ? "border-foreground ring-1 ring-foreground ring-offset-2" : "border-border")} style={{ backgroundColor: c.hex }} />
+                  {c.name}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
 
       <fieldset>
         <legend className="eyebrow mb-3">Size</legend>

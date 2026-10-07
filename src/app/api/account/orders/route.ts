@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { getCustomerSession } from "@/lib/customer/session";
-import { products as staticProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
@@ -45,14 +44,6 @@ export async function GET(req: Request) {
         // 1. Try images from attached DB product
         if (item.product?.images && Array.isArray(item.product.images) && item.product.images.length > 0) {
           image = String(item.product.images[0]);
-        }
-
-        // 2. Try static products fallback
-        if (!image) {
-          const staticMatch = staticProducts.find((p) => p.slug === item.slug);
-          if (staticMatch?.images?.[0]) {
-            image = staticMatch.images[0];
-          }
         }
 
         return {

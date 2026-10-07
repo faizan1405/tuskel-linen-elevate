@@ -4,8 +4,7 @@ import { formatProduct } from "@/lib/db/formatters";
 
 /**
  * GET /api/products/[slug]
- * Returns a single product by slug, checking both MySQL and static catalogue.
- * MySQL products override/expand the static catalogue.
+ * Returns a single active product by slug from MySQL only.
  */
 export async function GET(
   _req: Request,
@@ -17,7 +16,6 @@ export async function GET(
       return NextResponse.json({ error: "Slug is required" }, { status: 400 });
     }
 
-    // Try MySQL first (admin-created products take precedence)
     const doc = await prisma.product.findFirst({
       where: {
         slug,
@@ -27,14 +25,6 @@ export async function GET(
 
     if (doc) {
       return NextResponse.json({ product: formatProduct(doc) });
-    }
-
-    // Fall back to static catalogue
-    const { products } = await import("@/lib/products");
-    const staticProduct = products.find((p) => p.slug === slug);
-
-    if (staticProduct) {
-      return NextResponse.json({ product: staticProduct });
     }
 
     return NextResponse.json({ error: "Product not found" }, { status: 404 });

@@ -256,7 +256,7 @@ function ProductModal({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2 sm:col-span-2">
                 <Label className="text-sm">Product Name <span className="text-destructive">*</span></Label>
-                <Input value={form.name ?? ""} onChange={(e) => update("name", e.target.value)} placeholder="e.g. Tuskel Aqua Mist Pure Linen Shirt" className="h-9" />
+                <Input value={form.name ?? ""} onChange={(e) => update("name", e.target.value)} placeholder="e.g. Tuskel Classic Linen Shirt" className="h-9" />
               </div>
               <div className="space-y-2">
                 <Label className="text-sm">SKU <span className="text-xs text-muted-foreground font-normal">(Optional)</span></Label>
@@ -304,15 +304,15 @@ function ProductModal({
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label className="text-sm">Color Name</Label>
-                <Input value={form.colorName ?? ""} onChange={(e) => update("colorName", e.target.value)} placeholder="e.g. Aqua Mist" className="h-9" />
+                <Input value={form.colorName ?? ""} onChange={(e) => update("colorName", e.target.value)} placeholder="e.g. Sky Blue" className="h-9" />
               </div>
               <div className="space-y-2">
                 <Label className="text-sm">Color Slug</Label>
-                <Input value={form.colorSlug ?? ""} onChange={(e) => update("colorSlug", e.target.value)} placeholder="e.g. aqua-mist" className="h-9" />
+                <Input value={form.colorSlug ?? ""} onChange={(e) => update("colorSlug", e.target.value)} placeholder="e.g. sky-blue" className="h-9" />
               </div>
               <div className="space-y-2">
                 <Label className="text-sm">Swatch / Hex</Label>
-                <Input value={form.swatch ?? ""} onChange={(e) => update("swatch", e.target.value)} placeholder="e.g. #7EC8C8" className="h-9" />
+                <Input value={form.swatch ?? ""} onChange={(e) => update("swatch", e.target.value)} placeholder="e.g. #4A90E2" className="h-9" />
               </div>
             </div>
             <ImageUploader images={form.images || []} onChange={(imgs) => update("images", imgs)} onUpload={onUpload} />
