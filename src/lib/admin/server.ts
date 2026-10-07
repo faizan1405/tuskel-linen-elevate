@@ -9,6 +9,7 @@ import {
   formatCategory,
   formatInquiry,
 } from "@/lib/db/formatters";
+import { normalizeImageUrl } from "@/lib/images";
 
 // ─── Products ────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,7 @@ export async function adminCreateProduct(data: any) {
   const parsed = z.object({
     name: z.string().min(1),
     slug: z.string().optional(),
+    sku: z.string().optional().nullable(),
     fabric: z.string().min(1),
     fabricLabel: z.string().min(1),
     colorName: z.string().min(1),
@@ -54,9 +56,13 @@ export async function adminCreateProduct(data: any) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
 
+  const rawSku = parsed.sku !== undefined && parsed.sku !== null ? parsed.sku.trim() : null;
+  const sku = rawSku && rawSku.length > 0 ? rawSku : null;
+
   const doc = await prisma.product.create({
     data: {
       slug,
+      sku,
       name: parsed.name,
       fabric: parsed.fabric,
       fabricLabel: parsed.fabricLabel,
@@ -65,7 +71,7 @@ export async function adminCreateProduct(data: any) {
       swatch: parsed.swatch,
       mrp: parsed.mrp,
       price: parsed.price,
-      images: parsed.images,
+      images: parsed.images.map(normalizeImageUrl),
       sizes: parsed.sizes,
       summary: parsed.summary,
       details: parsed.details,
@@ -89,6 +95,7 @@ export async function adminUpdateProduct(data: any) {
     slug: z.string(),
     data: z.object({
       name: z.string().optional(),
+      sku: z.string().optional().nullable(),
       fabric: z.string().optional(),
       fabricLabel: z.string().optional(),
       colorName: z.string().optional(),
@@ -121,6 +128,11 @@ export async function adminUpdateProduct(data: any) {
       prismaData["stock"] = v;
     } else if (k === "_status" || k === "status") {
       prismaData["status"] = v;
+    } else if (k === "sku") {
+      const rawSku = v !== null && typeof v === "string" ? v.trim() : null;
+      prismaData["sku"] = rawSku && rawSku.length > 0 ? rawSku : null;
+    } else if (k === "images") {
+      prismaData["images"] = Array.isArray(v) ? v.map(normalizeImageUrl) : [];
     } else {
       prismaData[k] = v;
     }
@@ -156,9 +168,9 @@ export async function adminUploadImage(data: any) {
     folder: z.string().optional(),
   }).parse(data);
 
-  // If the admin passed an existing URL or asset path, return it directly
-  if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/")) {
-    return { url: image };
+  // If the admin passed an existing URL or asset path, normalize and return it directly
+  if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/") || image.includes("drive.google.com")) {
+    return { url: normalizeImageUrl(image) };
   }
 
   throw new Error("Direct image file uploads are disabled for MVP until Hostinger persistent storage is configured. Please provide an image URL or static asset path.");

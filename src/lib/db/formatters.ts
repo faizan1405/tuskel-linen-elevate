@@ -1,8 +1,12 @@
+import { normalizeImageUrl } from "@/lib/images";
+
 export function formatProduct(p: any) {
   if (!p) return null;
+  const rawSku = p.sku !== undefined && p.sku !== null ? String(p.sku).trim() : null;
   return {
     id: p.id,
     slug: p.slug,
+    sku: rawSku && rawSku.length > 0 ? rawSku : null,
     name: p.name,
     fabric: p.fabric,
     fabricLabel: p.fabricLabel,
@@ -11,7 +15,7 @@ export function formatProduct(p: any) {
     swatch: p.swatch,
     mrp: Number(p.mrp),
     price: Number(p.price),
-    images: Array.isArray(p.images) ? (p.images as string[]) : [],
+    images: Array.isArray(p.images) ? (p.images as string[]).map(normalizeImageUrl) : [],
     sizes: Array.isArray(p.sizes) ? (p.sizes as string[]) : [],
     summary: p.summary ?? "",
     details: Array.isArray(p.details) ? (p.details as string[]) : [],
@@ -94,7 +98,7 @@ export function formatCategory(c: any) {
     slug: c.slug,
     description: c.description ?? "",
     parent: c.parent ?? null,
-    image: c.image ?? "",
+    image: c.image ? normalizeImageUrl(c.image) : "",
     active: Boolean(c.active),
     productCount: Number(c.productCount ?? 0),
     createdAt: c.createdAt,

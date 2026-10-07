@@ -121,6 +121,7 @@ export const INQUIRY_STATUSES: { value: AdminInquiry["status"]; label: string; c
 // ─── AdminProduct (extends Product with editable fields) ──────────────────────
 
 export interface AdminProduct extends Product {
+  sku?: string | null;
   _stock?: number;
   _status?: "active" | "draft" | "archived";
 }

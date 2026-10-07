@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { formatProduct } from "@/lib/db/formatters";
 import { requireAdminAuth } from "@/lib/admin/auth-middleware";
+import { normalizeImageUrls } from "@/lib/images";
 
 export async function GET() {
   const authError = await requireAdminAuth();
@@ -32,9 +33,13 @@ export async function POST(req: Request) {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
 
+    const rawSku = body.sku !== undefined && body.sku !== null ? String(body.sku).trim() : null;
+    const sku = rawSku && rawSku.length > 0 ? rawSku : null;
+
     const doc = await prisma.product.create({
       data: {
         slug,
+        sku,
         name: body.name,
         fabric: body.fabric,
         fabricLabel: body.fabricLabel,
@@ -43,7 +48,7 @@ export async function POST(req: Request) {
         swatch: body.swatch,
         mrp: Number(body.mrp),
         price: Number(body.price),
-        images: Array.isArray(body.images) ? body.images : [],
+        images: normalizeImageUrls(body.images),
         sizes: Array.isArray(body.sizes) ? body.sizes : ["S", "M", "L", "XL", "2XL", "3XL"],
         summary: body.summary ?? "",
         details: Array.isArray(body.details) ? body.details : [],

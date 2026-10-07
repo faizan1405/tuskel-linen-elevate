@@ -25,6 +25,7 @@ export type Fabric = "pure-linen" | "linen-blend";
 export interface Product {
   id: string;
   slug: string;
+  sku?: string | null;
   name: string;
   fabric: Fabric;
   fabricLabel: string;

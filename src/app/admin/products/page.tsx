@@ -27,6 +27,7 @@ import { inr } from "@/lib/format";
 import { Search, Plus, Pencil, Trash2, Package, ImagePlus, X, Loader2 } from "lucide-react";
 import type { Fabric } from "@/lib/products";
 import { toast } from "sonner";
+import { normalizeImageUrl } from "@/lib/images";
 
 const FABRIC_LABELS: Record<Fabric, string> = { "pure-linen": "Pure Linen", "linen-blend": "Linen Blend" };
 const STATUS_OPTS = ["active", "draft", "archived"] as const;
@@ -39,7 +40,8 @@ function ImageUploader({ images, onChange }: { images: string[]; onChange: (urls
   const handleAddUrl = (e: React.FormEvent) => {
     e.preventDefault();
     if (!urlInput.trim()) return;
-    onChange([...images, urlInput.trim()]);
+    const normalized = normalizeImageUrl(urlInput.trim());
+    onChange([...images, normalized]);
     setUrlInput("");
     toast.success("Image URL added");
   };
@@ -49,7 +51,7 @@ function ImageUploader({ images, onChange }: { images: string[]; onChange: (urls
       <Label className="text-sm font-medium">Product Images</Label>
       <div className="flex gap-2">
         <Input
-          placeholder="Paste image URL (e.g. Unsplash or static path)"
+          placeholder="Paste image URL or Google Drive link"
           value={urlInput}
           onChange={(e) => setUrlInput(e.target.value)}
           className="h-9 text-sm"
@@ -59,7 +61,7 @@ function ImageUploader({ images, onChange }: { images: string[]; onChange: (urls
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        Direct runtime file upload is disabled for MVP until Hostinger persistent media storage is configured. Provide image URLs or static asset paths.
+        Paste direct image URLs or Google Drive sharing links. Google Drive files must be shared as &ldquo;Anyone with the link&rdquo;.
       </p>
       {images.length > 0 && (
         <div className="flex gap-2.5 flex-wrap pt-1">
@@ -138,8 +140,9 @@ function ProductModal({
 }) {
   const editing = !!product;
   const blank: Partial<AdminProduct> = {
+    sku: "",
     fabric: "pure-linen", _status: "draft", price: 2999, mrp: 3999, _stock: 0,
-    summary: "", images: [], sizes: ["S", "M", "L", "XL"], details: [], care: [],
+    summary: "", images: [], sizes: ["S", "M", "L", "XL", "2XL", "3XL"], details: [], care: [],
     fabricLabel: "", colorName: "", colorSlug: "", swatch: "",
     fit: "", modelNote: "", newArrival: false, bestSeller: false, popularity: 0,
     addedOn: "",
@@ -150,10 +153,14 @@ function ProductModal({
   const save = () => {
     if (!form.name?.trim()) { toast.error("Product name is required"); return; }
     if (!form.price || !form.mrp) { toast.error("Price and MRP are required"); return; }
+    const rawSku = form.sku !== undefined && form.sku !== null ? String(form.sku).trim() : null;
+    const sku = rawSku && rawSku.length > 0 ? rawSku : null;
+
     onSave({
       id: product?.id || `prod-${Date.now()}`,
-      slug: product?.slug || form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
-      name: form.name,
+      slug: product?.slug || form.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+      sku,
+      name: form.name.trim(),
       fabric: form.fabric || "pure-linen",
       fabricLabel: form.fabricLabel || FABRIC_LABELS[form.fabric || "pure-linen"],
       colorName: form.colorName || "",
@@ -161,7 +168,7 @@ function ProductModal({
       swatch: form.swatch || "",
       mrp: Number(form.mrp),
       price: Number(form.price),
-      images: form.images || [],
+      images: (form.images || []).map(normalizeImageUrl),
       sizes: form.sizes || [],
       summary: form.summary || "",
       details: form.details || [],
@@ -185,10 +192,16 @@ function ProductModal({
           <p className="text-xs text-muted-foreground">{editing ? "Update product details and pricing" : "Fill in the details to add a new product"}</p>
         </DialogHeader>
         <div className="space-y-6 py-5">
-          <FormSection title="Basic Information" description="Name, fabric, status and pricing">
-            <div className="space-y-2">
-              <Label className="text-sm">Product Name <span className="text-destructive">*</span></Label>
-              <Input value={form.name ?? ""} onChange={(e) => update("name", e.target.value)} placeholder="e.g. Tuskel Aqua Mist Pure Linen Shirt" className="h-9" />
+          <FormSection title="Basic Information" description="Name, SKU, fabric, status and pricing">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2 sm:col-span-2">
+                <Label className="text-sm">Product Name <span className="text-destructive">*</span></Label>
+                <Input value={form.name ?? ""} onChange={(e) => update("name", e.target.value)} placeholder="e.g. Tuskel Aqua Mist Pure Linen Shirt" className="h-9" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm">SKU <span className="text-xs text-muted-foreground font-normal">(Optional)</span></Label>
+                <Input value={form.sku ?? ""} onChange={(e) => update("sku", e.target.value)} placeholder="e.g. TSK-LIN-001" className="h-9" />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -246,20 +259,31 @@ function ProductModal({
             <div className="space-y-2.5">
               <Label className="text-sm font-medium">Sizes Available</Label>
               <div className="flex flex-wrap gap-4">
-                {ALL_SIZES.map((s) => (
-                  <label key={s} className="flex items-center gap-2 text-sm cursor-pointer group">
-                    <div className={`h-[18px] w-[18px] rounded-md border-2 flex items-center justify-center transition-all ${
-                      (form.sizes || []).includes(s) ? "bg-primary border-primary" : "border-border group-hover:border-primary/50"
-                    }`}>
-                      {(form.sizes || []).includes(s) && (
-                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
+                {ALL_SIZES.map((s) => {
+                  const isChecked = Boolean((form.sizes || []).includes(s as any));
+                  const id = `size-opt-${s}`;
+                  return (
+                    <div key={s} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={id}
+                        checked={isChecked}
+                        onCheckedChange={(checked) => {
+                          const currentSizes = Array.isArray(form.sizes) ? [...form.sizes] : [];
+                          if (checked) {
+                            if (!currentSizes.includes(s as any)) {
+                              update("sizes", [...currentSizes, s as any]);
+                            }
+                          } else {
+                            update("sizes", currentSizes.filter((x) => x !== s));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={id} className="text-sm font-medium cursor-pointer">
+                        {s}
+                      </Label>
                     </div>
-                    <span className="font-medium">{s}</span>
-                  </label>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </FormSection>
@@ -342,7 +366,7 @@ export default function ProductsPage() {
   const handleSave = (p: AdminProduct) => {
     if (isAdding) {
       createMutation.mutate({
-        name: p.name, fabric: p.fabric, fabricLabel: p.fabricLabel,
+        name: p.name, sku: p.sku ?? null, fabric: p.fabric, fabricLabel: p.fabricLabel,
         colorName: p.colorName, colorSlug: p.colorSlug, swatch: p.swatch,
         mrp: p.mrp, price: p.price, summary: p.summary, images: p.images,
         sizes: p.sizes, details: p.details, care: p.care, fit: p.fit,
@@ -355,7 +379,9 @@ export default function ProductsPage() {
     } else {
       if (!p.slug) return;
       const { id, ...rest } = p;
-      updateMutation.mutate({ slug: p.slug, data: rest });
+      updateMutation.mutate({ slug: p.slug, data: rest }, {
+        onSuccess: () => setEditingProduct(null),
+      });
     }
   };
 
@@ -494,7 +520,10 @@ export default function ProductsPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">{p.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{p.colorName || p.fabricLabel} &middot; {p.sizes?.slice(0, 3).join(", ")}{p.sizes?.length > 3 ? "…" : ""}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {p.sku ? <span className="font-mono text-muted-foreground/90 font-medium">[{p.sku}] </span> : null}
+                            {p.colorName || p.fabricLabel} &middot; {p.sizes?.slice(0, 3).join(", ")}{p.sizes?.length > 3 ? "…" : ""}
+                          </p>
                         </div>
                       </div>
                     </TableCell>

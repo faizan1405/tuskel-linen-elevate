@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin/auth-middleware";
+import { normalizeImageUrl } from "@/lib/images";
 
 export async function POST(req: Request) {
   const authError = await requireAdminAuth();
@@ -11,9 +12,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Image data is required" }, { status: 400 });
     }
 
-    // If an image URL or static path is passed, accept it
-    if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/")) {
-      return NextResponse.json({ url: image });
+    // If an image URL or static path is passed, normalize and accept it
+    if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/") || image.includes("drive.google.com")) {
+      return NextResponse.json({ url: normalizeImageUrl(image) });
     }
 
     // Direct binary/base64 uploads are disabled for MVP until Hostinger persistent directory is configured

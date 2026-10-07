@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { formatProduct } from "@/lib/db/formatters";
 import { requireAdminAuth } from "@/lib/admin/auth-middleware";
+import { normalizeImageUrls } from "@/lib/images";
 
 const INTERNAL_FIELDS = new Set(["id", "_id", "__v", "createdAt", "updatedAt"]);
 
@@ -21,6 +22,11 @@ export async function PATCH(_req: Request, { params }: { params: Promise<{ slug:
           clean["status"] = String(v);
         } else if (k === "mrp" || k === "price") {
           clean[k] = Number(v);
+        } else if (k === "sku") {
+          const rawSku = v !== null && typeof v === "string" ? v.trim() : null;
+          clean["sku"] = rawSku && rawSku.length > 0 ? rawSku : null;
+        } else if (k === "images") {
+          clean["images"] = normalizeImageUrls(v);
         } else {
           clean[k] = v;
         }
