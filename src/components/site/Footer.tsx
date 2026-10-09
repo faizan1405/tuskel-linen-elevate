@@ -10,6 +10,7 @@ const shop = [
   { label: "Shop All", to: "/shop" },
   { label: "Pure Linen", to: "/collections/pure-linen" },
   { label: "Linen Blend", to: "/collections/linen-blend" },
+  { label: "Ethnic Wear", to: "/collections/ethnic-wear" },
   { label: "New Arrivals", to: "/new-arrivals" },
   { label: "Best Sellers", to: "/shop" },
 ] as const;

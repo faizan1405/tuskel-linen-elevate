@@ -1,6 +1,6 @@
 import { SIZES, type Size } from "./site";
 
-export type Fabric = "pure-linen" | "linen-blend";
+export type Fabric = "pure-linen" | "linen-blend" | "ethnic-wear";
 
 export interface Product {
   id: string;

@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { normalizeImageUrl, isGoogleDriveFolderUrl, extractGoogleDriveFileId } from "@/lib/images";
 import { ProductImage } from "@/components/ui/product-image";
 
-const FABRIC_LABELS: Record<Fabric, string> = { "pure-linen": "Pure Linen", "linen-blend": "Linen Blend" };
+const FABRIC_LABELS: Record<Fabric, string> = { "pure-linen": "Pure Linen", "linen-blend": "Linen Blend", "ethnic-wear": "Ethnic Wear" };
 const STATUS_OPTS = ["active", "draft", "archived"] as const;
 type StatusOpt = typeof STATUS_OPTS[number];
 const ALL_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"] as const;
@@ -271,6 +271,7 @@ function ProductModal({
                   <SelectContent>
                     <SelectItem value="pure-linen">Pure Linen</SelectItem>
                     <SelectItem value="linen-blend">Linen Blend</SelectItem>
+                    <SelectItem value="ethnic-wear">Ethnic Wear</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -484,6 +485,7 @@ export default function ProductsPage() {
                 <SelectItem value="all">All Fabrics</SelectItem>
                 <SelectItem value="pure-linen">Pure Linen</SelectItem>
                 <SelectItem value="linen-blend">Linen Blend</SelectItem>
+                <SelectItem value="ethnic-wear">Ethnic Wear</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>

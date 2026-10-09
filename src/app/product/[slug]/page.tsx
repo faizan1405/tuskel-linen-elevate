@@ -142,7 +142,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   return (
     <div className="pb-24">
       <div className="shell">
-        <Breadcrumbs items={[{ label: "Shop", to: "/shop" }, { label: product.fabricLabel, to: product.fabric === "pure-linen" ? "/collections/pure-linen" : "/collections/linen-blend" }, { label: product.colorName }]} />
+        <Breadcrumbs items={[{ label: "Shop", to: "/shop" }, { label: product.fabricLabel, to: product.fabric === "ethnic-wear" ? "/collections/ethnic-wear" : product.fabric === "pure-linen" ? "/collections/pure-linen" : "/collections/linen-blend" }, { label: product.colorName }]} />
 
         <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
           <div>

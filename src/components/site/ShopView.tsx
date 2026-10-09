@@ -166,6 +166,10 @@ export function ShopView({
         title: "No Linen Blend products available yet.",
         subtitle: "Check back soon or explore our other collections.",
       },
+      "ethnic-wear": {
+        title: "No products available in this collection yet.",
+        subtitle: "Check back soon as we update our catalogue.",
+      },
       all: defaultEmpty,
     };
 
@@ -296,10 +300,10 @@ function FilterPanel(props: {
         <fieldset>
           <legend className="eyebrow mb-3">Fabric</legend>
           <div className="space-y-2">
-            {(["pure-linen", "linen-blend"] as const).map((f) => (
+            {(["pure-linen", "linen-blend", "ethnic-wear"] as const).map((f) => (
               <label key={f} className="flex min-h-9 cursor-pointer items-center gap-2.5 text-[13px]">
                 <input type="checkbox" checked={props.fabrics.includes(f)} onChange={() => toggle(props.fabrics, f, props.setFabrics)} className="h-3.5 w-3.5 accent-[oklch(0.505_0.045_115)]" />
-                {f === "pure-linen" ? "Pure Linen" : "Linen Blend"}
+                {f === "pure-linen" ? "Pure Linen" : f === "linen-blend" ? "Linen Blend" : "Ethnic Wear"}
               </label>
             ))}
           </div>
