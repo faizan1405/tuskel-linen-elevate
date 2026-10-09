@@ -28,6 +28,7 @@ const MEGA = [
   { label: "Shop All", to: "/shop" },
   { label: "Pure Linen Shirts", to: "/collections/pure-linen" },
   { label: "Linen Blend Shirts", to: "/collections/linen-blend" },
+  { label: "Ethnic Wear", to: "/collections/ethnic-wear" },
   { label: "New Arrivals", to: "/new-arrivals" },
   { label: "Best Sellers", to: "/shop", search: { sort: "popularity" } as const },
   { label: "Size Guide", to: "/size-guide" },
